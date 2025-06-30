@@ -17,21 +17,21 @@ const navLinks = [
 
 const HamburgerIcon = () => (
   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-    <path
-      d="M5 12H27"
-      stroke="#09090B"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M5 20H27"
-      stroke="#09090B"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
+                <path
+                  d="M5 12H27"
+                  stroke="#09090B"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M5 20H27"
+                  stroke="#09090B"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
 );
 
 const CloseIcon = () => (
@@ -118,31 +118,31 @@ export default function Navigation() {
           </button>
         </div>
         <nav className={styles.mobileNavLinks}>
-          {navLinks.map((link) => (
+            {navLinks.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+                  href={link.href}
               className={styles.mobileNavLink}
               onClick={toggleMenu}
-            >
-              {link.label}
+                >
+                  {link.label}
             </Link>
-          ))}
+            ))}
         </nav>
         <div className={styles.mobileMenuActions}>
-          <DialogTrigger asChild>
+            <DialogTrigger asChild>
             <Button variant="outline" onClick={toggleMenu}>
-              Sign In
-            </Button>
-          </DialogTrigger>
-          <DialogTrigger asChild>
+                Sign In
+              </Button>
+            </DialogTrigger>
+            <DialogTrigger asChild>
             <Button onClick={toggleMenu}>Get Started</Button>
-          </DialogTrigger>
+            </DialogTrigger>
+          </div>
         </div>
-      </div>
       <DialogContent size="xl">
-        <LoginForm />
-      </DialogContent>
-    </Dialog>
+          <LoginForm />
+        </DialogContent>
+      </Dialog>
   );
 }
