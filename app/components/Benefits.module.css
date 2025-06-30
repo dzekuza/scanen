@@ -1,0 +1,233 @@
+/* Benefits Section Styles */
+.benefits-section {
+  background: #fff;
+  padding: 64px 20px;
+  min-height: auto;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .benefits-section {
+    width: 100%;
+    padding-left: 64px;
+    padding-right: 64px;
+    padding-top: 100px;
+    padding-bottom: 100px;
+    box-sizing: border-box;
+  }
+  .benefits-container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    box-sizing: border-box;
+  }
+}
+
+/* Benefits Badge */
+.benefits-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 4px 12px;
+  background: #fff;
+  border: 1px solid var(--primary-100);
+  border-radius: 100px;
+  height: 40px;
+  width: fit-content;
+}
+
+.badge-icon-container {
+  display: flex;
+  align-items: center;
+  gap: -2px;
+}
+
+.ranking-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.benefits-badge .badge-text {
+  color: var(--primary-700);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* Benefits Main Content */
+.benefits-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+}
+
+/* Benefits Title */
+.benefits-title {
+  width: 100%;
+  color: #18181b;
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.32px;
+  margin: 0;
+}
+
+/* Benefits Cards Container */
+.benefits-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+  width: 100%;
+}
+
+/* Individual Benefit Card */
+.benefit-card {
+  display: flex;
+  padding: 28px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  border-radius: 24px;
+  border: 1px solid #dee5ff;
+  background: linear-gradient(128deg, #fff 9.07%, #edf1ff 93.24%);
+}
+
+/* Benefit Icon */
+.benefit-icon {
+  display: flex;
+  padding: 12px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 16px;
+  background: #5c5bf9;
+}
+
+.benefit-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* Benefit Content */
+.benefit-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.benefit-title {
+  color: #27272a;
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 32px;
+  letter-spacing: 0.48px;
+  margin: 0;
+}
+
+.benefit-description {
+  width: 100%;
+  color: #3f3f47;
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .benefits-section {
+    padding: 80px 32px;
+  }
+  .benefits-container {
+    max-width: 600px;
+    gap: 24px;
+  }
+  .benefits-title {
+    font-size: 40px;
+    line-height: 48px;
+    letter-spacing: -0.4px;
+  }
+  .benefits-cards {
+    gap: 32px;
+  }
+  .benefit-card {
+    padding: 32px;
+  }
+  .benefit-title {
+    font-size: 28px;
+    line-height: 36px;
+  }
+  .benefit-description {
+    font-size: 18px;
+    line-height: 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .benefits-section {
+    padding: 100px 64px;
+  }
+  .benefits-container {
+    max-width: 1200px;
+    gap: 32px;
+  }
+  .benefits-title {
+    font-size: 48px;
+    line-height: 56px;
+    letter-spacing: -0.48px;
+  }
+  .benefits-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    width: 100%;
+  }
+  .benefit-card {
+    padding: 36px;
+  }
+  .benefit-title {
+    font-size: 32px;
+    line-height: 40px;
+  }
+  .benefit-description {
+    font-size: 20px;
+    line-height: 32px;
+  }
+} 

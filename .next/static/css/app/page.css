@@ -361,3 +361,276 @@
     padding: 100px 64px;
   }
 } 
+/*!*****************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./app/components/Problem.module.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************/
+/* Problem Section Styles */
+.Problem_problem-section__YMra9 {
+  background: #fff;
+  padding: 64px 20px;
+  min-height: auto;
+  width: 100%;
+}
+.Problem_problem-container__rWoXO {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Problem Badge */
+.Problem_problem-badge__PNEdi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 4px 12px;
+  background: #fff;
+  border: 1px solid var(--primary-100);
+  border-radius: 100px;
+  height: 40px;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.Problem_badge-content__tsoO_ {
+  display: flex;
+  align-items: center;
+  gap: -2px;
+}
+
+.Problem_lightbulb-icon__nIAuU {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.Problem_badge-text__uOrjg {
+  color: var(--primary-700);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* Problem Main Content */
+.Problem_problem-main___KBNV {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  width: 100%;
+}
+
+/* Video Container */
+.Problem_video-container__Ml6WL {
+  height: 212px;
+  width: 100%;
+  position: relative;
+}
+
+.Problem_video-placeholder__UZ8PT {
+  width: 100%;
+  height: 211px;
+  background: #e4e4e7;
+  border-radius: 24px;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.Problem_play-button__zGuqQ {
+  display: flex;
+  width: 56px;
+  height: 56px;
+  padding: 12px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  border-radius: 28px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.Problem_play-button-circle__ATnLa {
+  width: 56px;
+  height: 56px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.Problem_play-icon__3C1rX {
+  width: 28px;
+  height: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Problem Text */
+.Problem_problem-text__dTp7q {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+}
+
+.Problem_problem-title__cxjBt {
+  width: 100%;
+  color: #18181b;
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.32px;
+  margin: 0;
+  opacity: 1;
+  visibility: visible;
+}
+
+.Problem_problem-description__VBYMB {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+.Problem_problem-paragraph__rKv_X {
+  width: 100%;
+  color: #3f3f47;
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Problem CTA */
+.Problem_problem-cta__J_FN9 {
+  display: flex;
+  padding: 16px 16px 16px 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  border-radius: 100px;
+  background: var(--primary-500);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.Problem_problem-cta__J_FN9:hover {
+  background: #4b4ae8;
+  transform: translateY(-2px);
+}
+
+.Problem_problem-cta__J_FN9 .Problem_cta-text__UjC4e {
+  color: var(--neutral-50);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 24px;
+  text-transform: capitalize;
+}
+
+.Problem_cta-arrow-container__RjPnY {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  justify-content: center;
+  align-items: center;
+}
+
+.Problem_cta-arrow-down__3JPfv {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .Problem_problem-section__YMra9 {
+    padding: 80px 32px;
+  }
+  .Problem_problem-container__rWoXO {
+    max-width: 600px;
+    gap: 24px;
+  }
+  .Problem_video-container__Ml6WL {
+    height: 350px;
+  }
+  .Problem_video-placeholder__UZ8PT {
+    height: 349px;
+  }
+  .Problem_problem-title__cxjBt {
+    font-size: 40px;
+    line-height: 48px;
+    letter-spacing: -0.4px;
+  }
+  .Problem_problem-paragraph__rKv_X {
+    font-size: 18px;
+    line-height: 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .Problem_problem-section__YMra9 {
+    padding: 100px 64px;
+  }
+  .Problem_problem-container__rWoXO {
+    max-width: 100%;
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .Problem_video-container__Ml6WL {
+    height: 450px;
+  }
+  .Problem_video-placeholder__UZ8PT {
+    height: 449px;
+  }
+  .Problem_problem-title__cxjBt {
+    font-size: 48px;
+    line-height: 56px;
+    letter-spacing: -0.48px;
+  }
+  .Problem_problem-paragraph__rKv_X {
+    font-size: 20px;
+    line-height: 32px;
+  }
+  .Problem_problem-cta__J_FN9 {
+    padding: 20px 20px 20px 24px;
+  }
+  .Problem_problem-cta__J_FN9 .Problem_cta-text__UjC4e {
+    font-size: 20px;
+  }
+} 

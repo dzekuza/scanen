@@ -1,12 +1,14 @@
+import styles from './Problem.module.css';
+
 export default function Problem() {
   return (
-    <section className="problem-section">
-      <div className="problem-container">
+    <section className={styles['problem-section']}>
+      <div className={styles['problem-container']}>
         {/* Badge */}
-        <div className="problem-badge">
-          <div className="badge-content">
+        <div className={styles['problem-badge']}>
+          <div className={styles['badge-content']}>
             <svg
-              className="lightbulb-icon"
+              className={styles['lightbulb-icon']}
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -19,17 +21,17 @@ export default function Problem() {
               />
             </svg>
           </div>
-          <div className="badge-text">Problem Solving</div>
+          <div className={styles['badge-text']}>Problem Solving</div>
         </div>
 
         {/* Main Content */}
-        <div className="problem-main">
+        <div className={styles['problem-main']}>
           {/* Video Container */}
-          <div className="video-container">
-            <div className="video-placeholder"></div>
-            <button className="play-button">
+          <div className={styles['video-container']}>
+            <div className={styles['video-placeholder']}></div>
+            <button className={styles['play-button']}>
               <svg
-                className="play-button-circle"
+                className={styles['play-button-circle']}
                 width="56"
                 height="56"
                 viewBox="0 0 56 56"
@@ -39,7 +41,7 @@ export default function Problem() {
                 <circle opacity="0.15" cx="28" cy="28" r="28" fill="#09090B" />
               </svg>
               <svg
-                className="play-icon"
+                className={styles['play-icon']}
                 width="28"
                 height="28"
                 viewBox="0 0 28 28"
@@ -55,16 +57,16 @@ export default function Problem() {
           </div>
 
           {/* Text Content */}
-          <div className="problem-text">
-            <h2 className="problem-title">Stop Wasting Time on Proposals</h2>
+          <div className={styles['problem-text']}>
+            <h2 className={styles['problem-title']}>Stop Wasting Time on Proposals</h2>
 
-            <div className="problem-description">
-              <p className="problem-paragraph">
+            <div className={styles['problem-description']}>
+              <p className={styles['problem-paragraph']}>
                 Manually creating proposals drains your time and rarely feels
                 worth the effort — especially when you're juggling clients,
                 sales calls, and delivery.
               </p>
-              <p className="problem-paragraph">
+              <p className={styles['problem-paragraph']}>
                 With Scanen, you get professional, branded proposals that
                 impress clients, speed up approvals, and help you close deals
                 faster — without adding to your workload.
@@ -72,11 +74,11 @@ export default function Problem() {
             </div>
 
             {/* CTA Button */}
-            <button className="problem-cta">
-              <span className="cta-text">See How it Works</span>
-              <div className="cta-arrow-container">
+            <button className={styles['problem-cta']}>
+              <span className={styles['cta-text']}>See How it Works</span>
+              <div className={styles['cta-arrow-container']}>
                 <svg
-                  className="cta-arrow-down"
+                  className={styles['cta-arrow-down']}
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
