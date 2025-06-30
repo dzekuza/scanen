@@ -65,6 +65,11 @@ const data = {
       url: "#",
       icon: UsersIcon,
     },
+    {
+      title: "Customers",
+      url: "/dashboard/customers",
+      icon: UsersIcon,
+    },
   ],
   navClouds: [
     {
@@ -134,12 +139,12 @@ const data = {
   documents: [
     {
       name: "Data Library",
-      url: "#",
+      url: "/dashboard/data-library",
       icon: DatabaseIcon,
     },
     {
       name: "Reports",
-      url: "#",
+      url: "/dashboard/reports",
       icon: ClipboardListIcon,
     },
     {
