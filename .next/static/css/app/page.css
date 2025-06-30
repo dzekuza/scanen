@@ -1,0 +1,363 @@
+/*!**************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./app/components/Hero.module.css ***!
+  \**************************************************************************************************************************************************************************************************************************************************************************/
+/* Hero Section Styles */
+.Hero_hero-section__uxO2i {
+  position: relative;
+  background: #fff;
+  padding: 64px 20px;
+  min-height: 584px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.Hero_hero-background__5VJcj {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.Hero_gradient-blur__ROuLu {
+  position: absolute;
+  width: 464px;
+  height: 587px;
+  background: linear-gradient(77deg, #ebefff 26.03%, #f4ebff 72.77%);
+  border-radius: 50%;
+  filter: blur(50px);
+  transform: rotate(-135deg);
+  top: -200px;
+  right: -200px;
+  opacity: 0.8;
+}
+
+.Hero_hero-container__hfXbZ {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+.Hero_hero-content__4dCfr {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-width: 375px;
+}
+
+.Hero_hero-header__FNMe8 {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Rating Badge */
+.Hero_rating-badge__ztke1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 4px 12px;
+  background: #fff;
+  border: 1px solid var(--primary-100);
+  border-radius: 100px;
+  height: 40px;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.Hero_stars-container__kzVuL {
+  display: flex;
+  align-items: center;
+  gap: -2px;
+}
+
+.Hero_star-icon__YwxGQ {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.Hero_rating-text__qR2IV {
+  color: var(--primary-700);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.Hero_rating-number__JC304 {
+  font-weight: 700;
+}
+
+/* Hero Title */
+.Hero_hero-title__n405P {
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 56px;
+  letter-spacing: -0.48px;
+  color: #09090b;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.Hero_title-highlight__GRpdI {
+  color: var(--primary-600);
+}
+
+/* Hero Description */
+.Hero_hero-description__o1LA1 {
+  color: var(--neutral-800);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0;
+}
+
+/* CTA Button */
+.Hero_cta-container__HFPPS {
+  position: relative;
+  width: -moz-fit-content;
+  width: fit-content;
+}
+
+.Hero_cta-button__jHC0J {
+  display: flex;
+  align-items: center;
+  background: var(--primary-500);
+  border: none;
+  border-radius: 100px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.Hero_cta-button__jHC0J:hover {
+  background: #4b4ae8;
+  transform: translateY(-2px);
+}
+
+.Hero_cta-text__bj54x {
+  color: var(--neutral-50);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 24px;
+  text-transform: capitalize;
+}
+
+.Hero_cta-icon-container__ZM4Zk {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64px;
+  height: 64px;
+  background: var(--primary-500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.Hero_cta-button__jHC0J:hover .Hero_cta-icon-container__ZM4Zk {
+  background: #4b4ae8;
+  transform: translateY(-50%) translateX(4px);
+}
+
+.Hero_cta-arrow__M_8bV {
+  width: 24px;
+  height: 24px;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .Hero_hero-section__uxO2i {
+    padding: 80px 32px;
+    min-height: 600px;
+  }
+
+  .Hero_hero-content__4dCfr {
+    max-width: 600px;
+    gap: 48px;
+  }
+
+  .Hero_hero-title__n405P {
+    font-size: 56px;
+    line-height: 64px;
+    letter-spacing: -0.56px;
+  }
+
+  .Hero_hero-description__o1LA1 {
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .Hero_gradient-blur__ROuLu {
+    width: 600px;
+    height: 700px;
+    top: -150px;
+    right: -150px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .Hero_hero-section__uxO2i {
+    padding: 100px 64px;
+    min-height: 700px;
+  }
+
+  .Hero_hero-content__4dCfr {
+    max-width: 100%;
+    gap: 56px;
+  }
+
+  .Hero_hero-title__n405P {
+    font-size: 64px;
+    line-height: 72px;
+    letter-spacing: -0.64px;
+  }
+
+  .Hero_hero-description__o1LA1 {
+    font-size: 20px;
+    line-height: 32px;
+  }
+
+  .Hero_cta-button__jHC0J {
+    padding: 24px 32px;
+  }
+
+  .Hero_cta-text__bj54x {
+    font-size: 20px;
+  }
+
+  .Hero_gradient-blur__ROuLu {
+    width: 800px;
+    height: 900px;
+    top: -200px;
+    right: -200px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .Hero_hero-content__4dCfr {
+    max-width: 800px;
+  }
+} 
+/*!******************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[13].oneOf[7].use[3]!./app/components/Partners.module.css ***!
+  \******************************************************************************************************************************************************************************************************************************************************************************/
+/* Partners Section Styles */
+.Partners_partners-section__Yd0Ad {
+  background: #fff;
+  padding: 64px 20px;
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.Partners_partners-container__D_v2V {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.Partners_partners-marquee__DQGfs {
+  width: 100%;
+  overflow: hidden;
+}
+
+.Partners_partners-track___mJRF {
+  display: flex;
+  animation: Partners_marqueeScroll__mfyC7 30s linear infinite;
+  width: calc(200% + 64px);
+}
+
+.Partners_partner-item__2w9Cq {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  margin-right: 64px;
+  flex-shrink: 0;
+}
+
+.Partners_partner-dot__6Zv6O {
+  width: 23px;
+  height: 23px;
+  background: var(--neutral-950);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.Partners_partner-name__Txtvc {
+  color: var(--neutral-950);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0.48px;
+}
+
+@keyframes Partners_marqueeScroll__mfyC7 {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (min-width: 768px) {
+  .Partners_partners-section__Yd0Ad {
+    padding: 80px 32px;
+  }
+  .Partners_partner-name__Txtvc {
+    font-size: 28px;
+    line-height: 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .Partners_partners-section__Yd0Ad {
+    padding: 100px 64px;
+  }
+} 

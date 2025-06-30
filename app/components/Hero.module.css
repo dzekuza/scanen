@@ -1,0 +1,273 @@
+/* Hero Section Styles */
+.hero-section {
+  position: relative;
+  background: #fff;
+  padding: 64px 20px;
+  min-height: 584px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gradient-blur {
+  position: absolute;
+  width: 464px;
+  height: 587px;
+  background: linear-gradient(77deg, #ebefff 26.03%, #f4ebff 72.77%);
+  border-radius: 50%;
+  filter: blur(50px);
+  transform: rotate(-135deg);
+  top: -200px;
+  right: -200px;
+  opacity: 0.8;
+}
+
+.hero-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-width: 375px;
+}
+
+.hero-header {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Rating Badge */
+.rating-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 4px 12px;
+  background: #fff;
+  border: 1px solid var(--primary-100);
+  border-radius: 100px;
+  height: 40px;
+  width: fit-content;
+}
+
+.stars-container {
+  display: flex;
+  align-items: center;
+  gap: -2px;
+}
+
+.star-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.rating-text {
+  color: var(--primary-700);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.rating-number {
+  font-weight: 700;
+}
+
+/* Hero Title */
+.hero-title {
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 56px;
+  letter-spacing: -0.48px;
+  color: #09090b;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.title-highlight {
+  color: var(--primary-600);
+}
+
+/* Hero Description */
+.hero-description {
+  color: var(--neutral-800);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0;
+}
+
+/* CTA Button */
+.cta-container {
+  position: relative;
+  width: fit-content;
+}
+
+.cta-button {
+  display: flex;
+  align-items: center;
+  background: var(--primary-500);
+  border: none;
+  border-radius: 100px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+}
+
+.cta-button:hover {
+  background: #4b4ae8;
+  transform: translateY(-2px);
+}
+
+.cta-text {
+  color: var(--neutral-50);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 24px;
+  text-transform: capitalize;
+}
+
+.cta-icon-container {
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64px;
+  height: 64px;
+  background: var(--primary-500);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover .cta-icon-container {
+  background: #4b4ae8;
+  transform: translateY(-50%) translateX(4px);
+}
+
+.cta-arrow {
+  width: 24px;
+  height: 24px;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .hero-section {
+    padding: 80px 32px;
+    min-height: 600px;
+  }
+
+  .hero-content {
+    max-width: 600px;
+    gap: 48px;
+  }
+
+  .hero-title {
+    font-size: 56px;
+    line-height: 64px;
+    letter-spacing: -0.56px;
+  }
+
+  .hero-description {
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .gradient-blur {
+    width: 600px;
+    height: 700px;
+    top: -150px;
+    right: -150px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-section {
+    padding: 100px 64px;
+    min-height: 700px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    gap: 56px;
+  }
+
+  .hero-title {
+    font-size: 64px;
+    line-height: 72px;
+    letter-spacing: -0.64px;
+  }
+
+  .hero-description {
+    font-size: 20px;
+    line-height: 32px;
+  }
+
+  .cta-button {
+    padding: 24px 32px;
+  }
+
+  .cta-text {
+    font-size: 20px;
+  }
+
+  .gradient-blur {
+    width: 800px;
+    height: 900px;
+    top: -200px;
+    right: -200px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .hero-content {
+    max-width: 800px;
+  }
+} 

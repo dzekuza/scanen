@@ -1,0 +1,82 @@
+/* Partners Section Styles */
+.partners-section {
+  background: #fff;
+  padding: 64px 20px;
+  min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.partners-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.partners-marquee {
+  width: 100%;
+  overflow: hidden;
+}
+
+.partners-track {
+  display: flex;
+  animation: marqueeScroll 30s linear infinite;
+  width: calc(200% + 64px);
+}
+
+.partner-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  margin-right: 64px;
+  flex-shrink: 0;
+}
+
+.partner-dot {
+  width: 23px;
+  height: 23px;
+  background: var(--neutral-950);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.partner-name {
+  color: var(--neutral-950);
+  font-family:
+    "Satoshi",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0.48px;
+}
+
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (min-width: 768px) {
+  .partners-section {
+    padding: 80px 32px;
+  }
+  .partner-name {
+    font-size: 28px;
+    line-height: 28px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .partners-section {
+    padding: 100px 64px;
+  }
+} 
