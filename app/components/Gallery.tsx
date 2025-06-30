@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import styles from './Gallery.module.css';
 
 const images = [
   '/icons/Rectangle 2.png',
@@ -13,38 +14,38 @@ export default function Gallery() {
   const [active, setActive] = useState(0);
 
   return (
-    <section className="gallery-section">
-      <div className="gallery-container">
-        <div className="gallery-badge">
-          <span className="gallery-badge-icon">
+    <section className={styles['gallery-section']}>
+      <div className={styles['gallery-container']}>
+        <div className={styles['gallery-badge']}>
+          <span className={styles['gallery-badge-icon']}>
             <img src="/icons/icon-StackSimple.svg" alt="Gallery Icon" />
           </span>
-          <span className="gallery-badge-text">Gallery</span>
+          <span className={styles['gallery-badge-text']}>Gallery</span>
         </div>
-        <div className="gallery-header">
-          <h2 className="gallery-title">See What You Can Send</h2>
-          <p className="gallery-desc">Explore real AI-generated proposals — polished, branded, and ready to impress.</p>
+        <div className={styles['gallery-header']}>
+          <h2 className={styles['gallery-title']}>See What You Can Send</h2>
+          <p className={styles['gallery-desc']}>Explore real AI-generated proposals — polished, branded, and ready to impress.</p>
         </div>
-        <div className="gallery-main">
-          <div className="gallery-image-wrapper">
-            <img className="gallery-image" src={images[active]} alt="Gallery Example" />
+        <div className={styles['gallery-main']}>
+          <div className={styles['gallery-image-wrapper']}>
+            <img className={styles['gallery-image']} src={images[active]} alt="Gallery Example" />
           </div>
-          <div className="gallery-carousel">
+          <div className={styles['gallery-carousel']}>
             {images.map((_, idx) => (
               <span
                 key={idx}
                 className={
-                  'gallery-dot' + (idx === active ? ' gallery-dot--active' : '')
+                  `${styles['gallery-dot']} ${idx === active ? styles['gallery-dot--active'] : ''}`
                 }
                 onClick={() => setActive(idx)}
               />
             ))}
           </div>
         </div>
-        <button className="gallery-seeall-btn">
+        <button className={styles['gallery-seeall-btn']}>
           See All
           <img
-            className="gallery-seeall-arrow"
+            className={styles['gallery-seeall-arrow']}
             src="/icons/icon-ArrowRight.svg"
             alt="Arrow Right"
           />

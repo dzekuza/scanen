@@ -1,12 +1,14 @@
+import styles from './Benefits.module.css';
+
 export default function Benefits() {
   return (
-    <section className="benefits-section">
-      <div className="benefits-container">
+    <section className={styles['benefits-section']}>
+      <div className={styles['benefits-container']}>
         {/* Badge */}
-        <div className="benefits-badge">
-          <div className="badge-icon-container">
+        <div className={styles['benefits-badge']}>
+          <div className={styles['badge-icon-container']}>
             <svg
-              className="ranking-icon"
+              className={styles['ranking-icon']}
               width="20"
               height="20"
               viewBox="0 0 20 20"
@@ -19,21 +21,21 @@ export default function Benefits() {
               />
             </svg>
           </div>
-          <div className="badge-text">Our Benefits</div>
+          <div className={styles['badge-text']}>Our Benefits</div>
         </div>
 
         {/* Main Content */}
-        <div className="benefits-main">
+        <div className={styles['benefits-main']}>
           {/* Section Title */}
-          <h2 className="benefits-title">
+          <h2 className={styles['benefits-title']}>
             Designed For Growth, Powered by Precision
           </h2>
 
           {/* Benefits Cards */}
-          <div className="benefits-cards">
+          <div className={styles['benefits-cards']}>
             {/* Card 1 - 3 minutes */}
-            <div className="benefit-card">
-              <div className="benefit-icon">
+            <div className={styles['benefit-card']}>
+              <div className={styles['benefit-icon']}>
                 <svg
                   width="32"
                   height="32"
@@ -47,9 +49,9 @@ export default function Benefits() {
                   />
                 </svg>
               </div>
-              <div className="benefit-content">
-                <h3 className="benefit-title">3 minutes</h3>
-                <p className="benefit-description">
+              <div className={styles['benefit-content']}>
+                <h3 className={styles['benefit-title']}>3 minutes</h3>
+                <p className={styles['benefit-description']}>
                   Most users generate a complete, branded proposal in under 3
                   minutes — from first input to final PDF. No formatting, no
                   design work.
@@ -58,8 +60,8 @@ export default function Benefits() {
             </div>
 
             {/* Card 2 - 3× faster process */}
-            <div className="benefit-card">
-              <div className="benefit-icon">
+            <div className={styles['benefit-card']}>
+              <div className={styles['benefit-icon']}>
                 <svg
                   width="32"
                   height="32"
@@ -73,9 +75,9 @@ export default function Benefits() {
                   />
                 </svg>
               </div>
-              <div className="benefit-content">
-                <h3 className="benefit-title">3× faster process</h3>
-                <p className="benefit-description">
+              <div className={styles['benefit-content']}>
+                <h3 className={styles['benefit-title']}>3× faster process</h3>
+                <p className={styles['benefit-description']}>
                   Compared to templates or manual editing, Scanen helps users
                   build proposals three times faster — without sacrificing
                   quality or personalization.
@@ -84,8 +86,8 @@ export default function Benefits() {
             </div>
 
             {/* Card 3 - 82% same-day sending */}
-            <div className="benefit-card">
-              <div className="benefit-icon">
+            <div className={styles['benefit-card']}>
+              <div className={styles['benefit-icon']}>
                 <svg
                   width="32"
                   height="32"
@@ -99,9 +101,9 @@ export default function Benefits() {
                   />
                 </svg>
               </div>
-              <div className="benefit-content">
-                <h3 className="benefit-title">82% same-day sending</h3>
-                <p className="benefit-description">
+              <div className={styles['benefit-content']}>
+                <h3 className={styles['benefit-title']}>82% same-day sending</h3>
+                <p className={styles['benefit-description']}>
                   The majority of Scanen users send their proposal on the same
                   day they start — often within the first 15 minutes. No delays,
                   no drafts stuck in limbo.

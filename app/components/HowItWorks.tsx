@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import styles from './HowItWorks.module.css';
 
 const steps = [
   {
@@ -40,36 +41,36 @@ export default function HowItWorks() {
   }, []);
 
   return (
-    <section className="howitworks-section">
-      <div className="howitworks-container">
-        <div className="howitworks-badge">
-          <span className="howitworks-badge-icon">
+    <section className={styles['howitworks-section']}>
+      <div className={styles['howitworks-container']}>
+        <div className={styles['howitworks-badge']}>
+          <span className={styles['howitworks-badge-icon']}>
             <img src="/icons/icon-steps.svg" alt="How It Works Icon" />
           </span>
-          <span className="howitworks-badge-text">How It Works</span>
+          <span className={styles['howitworks-badge-text']}>How It Works</span>
         </div>
-        <h2 className="howitworks-title">Your Proposal, the Smart Way</h2>
-        <div className="howitworks-step-card">
+        <h2 className={styles['howitworks-title']}>Your Proposal, the Smart Way</h2>
+        <div className={styles['howitworks-step-card']}>
           <div
-            className="howitworks-step-image"
+            className={styles['howitworks-step-image']}
             style={{ background: steps[step].imageColor, width: '100%' }}
           />
-          <div className="howitworks-step-header">
-            <span className="howitworks-step-label">{steps[step].label}</span>
-            <div className="howitworks-step-carousel">
+          <div className={styles['howitworks-step-header']}>
+            <span className={styles['howitworks-step-label']}>{steps[step].label}</span>
+            <div className={styles['howitworks-step-carousel']}>
               {steps.map((_, idx) => (
                 <span
                   key={idx}
                   className={
-                    'howitworks-step-dot' + (idx === step ? ' howitworks-step-dot--active' : '')
+                    `${styles['howitworks-step-dot']} ${idx === step ? styles['howitworks-step-dot--active'] : ''}`
                   }
                 />
               ))}
             </div>
           </div>
-          <div className="howitworks-step-content">
-            <h3 className="howitworks-step-title">{steps[step].title}</h3>
-            <p className="howitworks-step-desc">{steps[step].desc}</p>
+          <div className={styles['howitworks-step-content']}>
+            <h3 className={styles['howitworks-step-title']}>{steps[step].title}</h3>
+            <p className={styles['howitworks-step-desc']}>{steps[step].desc}</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import styles from './Faq.module.css';
 
 const faqs = [
   {
@@ -44,28 +45,28 @@ export default function Faq() {
   };
 
   return (
-    <section className="faq-section">
-      <div className="faq-container">
-        <div className="faq-badge">
-          <span className="faq-badge-icon">
+    <section className={styles['faq-section']}>
+      <div className={styles['faq-container']}>
+        <div className={styles['faq-badge']}>
+          <span className={styles['faq-badge-icon']}>
             <img src={badgeIcon} alt="FAQ Icon" />
           </span>
-          <span className="faq-badge-text">FAQ</span>
+          <span className={styles['faq-badge-text']}>FAQ</span>
         </div>
-        <h2 className="faq-title">Got Questions? We've Got Answers</h2>
-        <div className="faq-list">
+        <h2 className={styles['faq-title']}>Got Questions? We've Got Answers</h2>
+        <div className={styles['faq-list']}>
           {faqs.map((faq, idx) => (
-            <div className="faq-item" key={idx}>
-              <button className="faq-question-btn" onClick={() => handleToggle(idx)} aria-expanded={open === idx}>
-                <span className="faq-question">{faq.question}</span>
-                <span className={`faq-icon ${open === idx ? 'open' : ''}`}>
+            <div className={styles['faq-item']} key={idx}>
+              <button className={styles['faq-question-btn']} onClick={() => handleToggle(idx)} aria-expanded={open === idx}>
+                <span className={styles['faq-question']}>{faq.question}</span>
+                <span className={`${styles['faq-icon']} ${open === idx ? styles.open : ''}`}>
                   <img
                     src={faqIcon}
                     alt="Toggle FAQ"
                   />
                 </span>
               </button>
-              <div className={`faq-answer ${open === idx ? 'open' : ''}`}>
+              <div className={`${styles['faq-answer']} ${open === idx ? styles.open : ''}`}>
                 {faq.answer}
               </div>
             </div>
