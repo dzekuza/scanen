@@ -1198,6 +1198,15 @@ video {
 .max-w-sm {
   max-width: 24rem;
 }
+.max-w-2xl {
+  max-width: 42rem;
+}
+.max-w-4xl {
+  max-width: 56rem;
+}
+.max-w-lg {
+  max-width: 32rem;
+}
 .flex-1 {
   flex: 1 1 0%;
 }
@@ -2464,6 +2473,14 @@ a {
 
   .sm\:max-w-sm {
     max-width: 24rem;
+  }
+
+  .sm\:max-w-2xl {
+    max-width: 42rem;
+  }
+
+  .sm\:max-w-4xl {
+    max-width: 56rem;
   }
 
   .sm\:flex-row {

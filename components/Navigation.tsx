@@ -140,7 +140,7 @@ export default function Navigation() {
           </DialogTrigger>
         </div>
       </div>
-      <DialogContent>
+      <DialogContent size="xl">
         <LoginForm />
       </DialogContent>
     </Dialog>

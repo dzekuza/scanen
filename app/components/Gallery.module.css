@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  align-items: center;
+  align-items: flex-start;
 }
 .gallery-badge {
   display: flex;
@@ -43,7 +43,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  text-align: center;
+  text-align: left;
   width: 100%;
 }
 .gallery-title {
@@ -63,7 +63,6 @@
   line-height: 24px;
   margin: 0;
   max-width: 500px;
-  align-self: center;
 }
 .gallery-main {
   display: flex;

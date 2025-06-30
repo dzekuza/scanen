@@ -251,7 +251,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  align-items: center;
+  align-items: flex-start;
 }
 .Faq_faq-badge__4Cxtg {
   display: flex;
@@ -288,7 +288,7 @@
   line-height: 40px;
   letter-spacing: -0.32px;
   margin: 0;
-  text-align: center;
+  text-align: left;
 }
 .Faq_faq-list__Pd_Ry {
   display: flex;
@@ -407,7 +407,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
-  align-items: center;
+  align-items: flex-start;
 }
 .Gallery_gallery-badge__YwdGt {
   display: flex;
@@ -440,7 +440,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  text-align: center;
+  text-align: left;
   width: 100%;
 }
 .Gallery_gallery-title__jC5SN {
@@ -460,7 +460,6 @@
   line-height: 24px;
   margin: 0;
   max-width: 500px;
-  align-self: center;
 }
 .Gallery_gallery-main__6cwzZ {
   display: flex;
