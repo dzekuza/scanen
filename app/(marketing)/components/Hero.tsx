@@ -55,24 +55,22 @@ export default function Hero() {
           <div className={styles['cta-container']}>
             <button className={styles['cta-button']}>
               <span className={styles['cta-text']}>Generate Proposal</span>
-              <div className={styles['cta-icon-container']}>
-                <svg
-                  className={styles['cta-arrow']}
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M3.75 12H20.25M20.25 12L13.5 5.25M20.25 12L13.5 18.75"
-                    stroke="#FAFAFA"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
+              <svg
+                className={styles['cta-arrow']}
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3.75 12H20.25M20.25 12L13.5 5.25M20.25 12L13.5 18.75"
+                  stroke="#FAFAFA"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
           </div>
         </div>

@@ -15,7 +15,7 @@ import {
 import { useDashboardTitle } from "@/components/dashboard-title-context";
 import { useAuth } from "@/components/auth-provider";
 import { supabase } from "@/lib/supabaseClient";
-import { Table, TableHeader, TableBody, Row, Cell, Column } from "@/components/ui/table";
+import { DataTable } from "@/components/data-table";
 
 export default function CustomersPage() {
   const { setTitle } = useDashboardTitle();
@@ -164,29 +164,15 @@ export default function CustomersPage() {
         ) : customers.length === 0 ? (
           <div className="p-8 text-center">No customers yet.</div>
         ) : (
-          <Table aria-label="Customers">
-            <TableHeader>
-              <Column isRowHeader>Name</Column>
-              <Column>Surname</Column>
-              <Column>Email</Column>
-              <Column>Actions</Column>
-            </TableHeader>
-            <TableBody>
-              {customers.map((c) => (
-                <Row key={c.id}>
-                  <Cell className="font-medium">{c.name}</Cell>
-                  <Cell>{c.surname}</Cell>
-                  <Cell>{c.email}</Cell>
-                  <Cell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="secondary" onClick={() => handleSendProposal(c)}>Send Proposal</Button>
-                      <Button size="sm" variant="outline" onClick={() => handleCopyProposalLink(c)}>Copy Link</Button>
-                    </div>
-                  </Cell>
-                </Row>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable data={customers.map((c, idx) => ({
+            id: c.id || idx,
+            header: c.name,
+            type: c.surname,
+            status: "Done",
+            target: c.email,
+            limit: "-",
+            reviewer: "-"
+          }))} />
         )}
       </div>
     </div>

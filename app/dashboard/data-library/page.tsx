@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabaseClient"
-import { Table, TableBody, TableHeader, Row, Cell, Column } from "@/components/ui/table"
+import { Table, TableBody, TableHeader, TableRow, TableCell, TableHead } from "@/components/ui/table"
 import { useEffect, useState } from "react"
 import { useDashboardTitle } from "@/components/dashboard-title-context"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -74,16 +74,18 @@ export default function DataLibraryPage() {
         <TabsContent value="uploaded">
           <Table aria-label="Data Library Files">
             <TableHeader>
-              <Column isRowHeader>File Name</Column>
-              <Column>Uploaded At</Column>
-              <Column>Download</Column>
+              <TableRow>
+                <TableHead>File Name</TableHead>
+                <TableHead>Uploaded At</TableHead>
+                <TableHead>Download</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               {uploadedFiles.map((file) => (
-                <Row key={file.filename}>
-                  <Cell>{file.original_name}</Cell>
-                  <Cell>{new Date(file.uploaded_at).toLocaleString()}</Cell>
-                  <Cell>
+                <TableRow key={file.filename}>
+                  <TableCell>{file.original_name}</TableCell>
+                  <TableCell>{new Date(file.uploaded_at).toLocaleString()}</TableCell>
+                  <TableCell>
                     <a
                       href={file.url}
                       target="_blank"
@@ -92,8 +94,8 @@ export default function DataLibraryPage() {
                     >
                       Download
                     </a>
-                  </Cell>
-                </Row>
+                  </TableCell>
+                </TableRow>
               ))}
             </TableBody>
           </Table>

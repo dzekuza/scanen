@@ -14,9 +14,9 @@ import {
   Table,
   TableBody,
   TableHeader,
-  Row,
-  Cell,
-  Column,
+  TableRow,
+  TableCell,
+  TableHead,
 } from "@/components/ui/table"
 import { supabase } from "@/lib/supabaseClient"
 import { useAuth } from "@/components/auth-provider"
@@ -186,40 +186,20 @@ export function DataLibrary() {
             <p className="text-sm text-muted-foreground">{uploadMessage}</p>
           )}
 
-          <Table
-            aria-label="Data Library Files"
-            selectionMode="multiple"
-            selectedKeys={selected}
-            onSelectionChange={(keys) => setSelected(keys)}
-          >
+          <Table aria-label="Data Library Files">
             <TableHeader>
-              <Column width={40} minWidth={40}>
-                <Checkbox
-                  slot="selection"
-                  isSelected={uploadedFiles.length > 0 && (selected === 'all' || (selected instanceof Set && selected.size === uploadedFiles.length))}
-                  isIndeterminate={selected instanceof Set && selected.size > 0 && selected.size < uploadedFiles.length}
-                  onChange={(isSelected: boolean) => {
-                    if (isSelected) {
-                      setSelected('all')
-                    } else {
-                      setSelected(new Set())
-                    }
-                  }}
-                />
-              </Column>
-              <Column isRowHeader>File Name</Column>
-              <Column>Uploaded At</Column>
-              <Column>Download</Column>
+              <TableRow>
+                <TableHead>File Name</TableHead>
+                <TableHead>Uploaded At</TableHead>
+                <TableHead>Download</TableHead>
+              </TableRow>
             </TableHeader>
             <TableBody>
               {uploadedFiles.map((file) => (
-                <Row key={file.filename}>
-                  <Cell>
-                    <Checkbox slot="selection" />
-                  </Cell>
-                  <Cell>{file.original_name}</Cell>
-                  <Cell>{new Date(file.uploaded_at).toLocaleString()}</Cell>
-                  <Cell>
+                <TableRow key={file.filename}>
+                  <TableCell>{file.original_name}</TableCell>
+                  <TableCell>{new Date(file.uploaded_at).toLocaleString()}</TableCell>
+                  <TableCell>
                     <a
                       href={file.url}
                       target="_blank"
@@ -228,8 +208,8 @@ export function DataLibrary() {
                     >
                       Download
                     </a>
-                  </Cell>
-                </Row>
+                  </TableCell>
+                </TableRow>
               ))}
             </TableBody>
           </Table>
