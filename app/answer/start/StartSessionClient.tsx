@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function StartSessionClient() {
   const router = useRouter();
@@ -13,12 +14,8 @@ export default function StartSessionClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<any>(null);
-  const [form, setForm] = useState({
-    name: "",
-    surname: "",
-    email: "",
-    phone: "",
-  });
+  const [emailModalOpen, setEmailModalOpen] = useState(true);
+  const [emailInput, setEmailInput] = useState("");
 
   // Fetch customer info if customer_id is present
   useEffect(() => {
@@ -27,37 +24,48 @@ export default function StartSessionClient() {
       setLoading(true);
       const { data, error } = await supabase
         .from("customers")
-        .select("name, surname, email")
+        .select("id, email")
         .eq("id", customerId)
         .single();
       if (data) {
         setCustomer(data);
-        setForm(f => ({ ...f, ...data }));
+        setEmailInput(data.email);
+        setEmailModalOpen(false);
+        // Immediately start session
+        startSession(data.id, data.email);
       }
       setLoading(false);
     }
     fetchCustomer();
   }, [customerId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const startSession = async (customerId: string, email: string) => {
     setLoading(true);
     setError(null);
+    // Fetch the customer to get business_id
+    const { data: customer, error: customerError } = await supabase
+      .from("customers")
+      .select("id, business_id, email")
+      .eq("id", customerId)
+      .single();
+    if (customerError || !customer) {
+      setLoading(false);
+      setError("Customer not found or missing business.");
+      return;
+    }
     // Create a new customer session
-    const { data, error } = await supabase.from("customer_sessions").insert([
-      {
-        customer_id: customerId,
-        name: form.name,
-        surname: form.surname,
-        email: form.email,
-        phone: form.phone,
-        status: "in_progress",
-      },
-    ]).select("id").single();
+    const { data, error } = await supabase
+      .from("customer_sessions")
+      .insert([
+        {
+          customer_id: customerId,
+          business_id: customer.business_id,
+          email,
+          status: "in_progress",
+        },
+      ])
+      .select("id")
+      .single();
     setLoading(false);
     if (error) {
       setError(error.message);
@@ -66,57 +74,57 @@ export default function StartSessionClient() {
     }
   };
 
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    // Try to find customer by email
+    const { data: existingCustomer, error: findError } = await supabase
+      .from("customers")
+      .select("id, email")
+      .eq("email", emailInput)
+      .single();
+    if (findError && findError.code !== "PGRST116") {
+      setLoading(false);
+      setError(findError.message);
+      return;
+    }
+    if (existingCustomer && existingCustomer.id) {
+      setCustomer(existingCustomer);
+      setEmailModalOpen(false);
+      // Immediately start session
+      startSession(existingCustomer.id, existingCustomer.email);
+    } else {
+      setError("No customer found with this email.");
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="max-w-md mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Start Your Session</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1">Name</label>
-          <Input
-            id="name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label htmlFor="surname" className="block text-sm font-medium mb-1">Surname</label>
-          <Input
-            id="surname"
-            name="surname"
-            value={form.surname}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            disabled={loading}
-          />
-        </div>
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium mb-1">Phone</label>
-          <Input
-            id="phone"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            disabled={loading}
-          />
-        </div>
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <Button type="submit" isDisabled={loading}>{loading ? "Starting..." : "Start Session"}</Button>
-      </form>
+      <Dialog open={emailModalOpen} onOpenChange={() => {}}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Enter Your Email</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <Input
+              id="emailInput"
+              name="emailInput"
+              type="email"
+              value={emailInput}
+              onChange={e => setEmailInput(e.target.value)}
+              placeholder="Enter your email"
+              required
+              disabled={loading}
+            />
+            {error && <div className="text-red-600 text-sm">{error}</div>}
+            <Button type="submit" isDisabled={loading}>
+              {loading ? "Checking..." : "Continue"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 

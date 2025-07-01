@@ -4,8 +4,18 @@ import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { ColumnDef } from "@tanstack/react-table"
 
 import data from "./data.json"
+
+const columns: ColumnDef<any, any>[] = [
+  { accessorKey: 'header', header: 'Header' },
+  { accessorKey: 'type', header: 'Type' },
+  { accessorKey: 'status', header: 'Status' },
+  { accessorKey: 'target', header: 'Target' },
+  { accessorKey: 'limit', header: 'Limit' },
+  { accessorKey: 'reviewer', header: 'Reviewer' },
+];
 
 export default function Page() {
   return (
@@ -20,7 +30,7 @@ export default function Page() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              <DataTable data={data} />
+              <DataTable data={data} columns={columns} />
             </div>
           </div>
         </div>
