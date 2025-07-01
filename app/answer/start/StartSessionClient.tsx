@@ -4,127 +4,141 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function StartSessionClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const customerId = searchParams?.get("customer_id") || "";
+  const userId = searchParams?.get("user_id") || "";
+  const token = searchParams?.get("token") || "";
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<any>(null);
-  const [emailModalOpen, setEmailModalOpen] = useState(true);
-  const [emailInput, setEmailInput] = useState("");
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [answers, setAnswers] = useState<{ [question_id: string]: string }>({});
+  const [step, setStep] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
-  // Fetch customer info if customer_id is present
   useEffect(() => {
-    if (!customerId) return;
-    async function fetchCustomer() {
+    async function fetchCustomerAndQuestions() {
       setLoading(true);
-      const { data, error } = await supabase
+      setError(null);
+      // 1. Fetch customer by id and fingerprint
+      const { data: customer, error: customerError } = await supabase
         .from("customers")
-        .select("id, email")
-        .eq("id", customerId)
+        .select("*")
+        .eq("id", userId)
+        .eq("fingerprint", token)
         .single();
-      if (data) {
-        setCustomer(data);
-        setEmailInput(data.email);
-        setEmailModalOpen(false);
-        // Immediately start session
-        startSession(data.id, data.email);
+      if (customerError || !customer) {
+        setError("Invalid or expired link. Please contact the business.");
+        setLoading(false);
+        return;
       }
+      setCustomer(customer);
+      // 2. Fetch questions for the business
+      const { data: questionsData } = await supabase
+        .from("analyzed_questions")
+        .select("*")
+        .eq("business_id", customer.business_id);
+      setQuestions(questionsData || []);
       setLoading(false);
     }
-    fetchCustomer();
-  }, [customerId]);
+    fetchCustomerAndQuestions();
+  }, [userId, token]);
 
-  const startSession = async (customerId: string, email: string) => {
-    setLoading(true);
-    setError(null);
-    // Fetch the customer to get business_id
-    const { data: customer, error: customerError } = await supabase
-      .from("customers")
-      .select("id, business_id, email")
-      .eq("id", customerId)
-      .single();
-    if (customerError || !customer) {
-      setLoading(false);
-      setError("Customer not found or missing business.");
-      return;
-    }
-    // Create a new customer session
-    const { data, error } = await supabase
-      .from("customer_sessions")
-      .insert([
-        {
-          customer_id: customerId,
-          business_id: customer.business_id,
-          email,
-          status: "in_progress",
-        },
-      ])
-      .select("id")
-      .single();
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else if (data && data.id) {
-      router.push(`/answer/${data.id}`);
-    }
+  // Save answers
+  const saveAnswers = async () => {
+    setSaving(true);
+    setSaveMsg(null);
+    const answerRows = questions.map(q => ({
+      user_id: customer.id,
+      question_id: q.id,
+      answer: answers[q.id] || "",
+    }));
+    await supabase.from("customer_answers").upsert(answerRows, { onConflict: 'user_id,question_id' });
+    setSaving(false);
+    setSaveMsg("Progress saved!");
+    setTimeout(() => setSaveMsg(null), 2000);
   };
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  // Submit (final)
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    // Try to find customer by email
-    const { data: existingCustomer, error: findError } = await supabase
-      .from("customers")
-      .select("id, email")
-      .eq("email", emailInput)
-      .single();
-    if (findError && findError.code !== "PGRST116") {
-      setLoading(false);
-      setError(findError.message);
-      return;
-    }
-    if (existingCustomer && existingCustomer.id) {
-      setCustomer(existingCustomer);
-      setEmailModalOpen(false);
-      // Immediately start session
-      startSession(existingCustomer.id, existingCustomer.email);
-    } else {
-      setError("No customer found with this email.");
-    }
-    setLoading(false);
+    await saveAnswers();
+    setSubmitted(true);
   };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-600 text-center p-6">{error}</div>;
+  if (submitted) return <div className="text-green-600 text-center p-6">Thank you! Your answers have been submitted.</div>;
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <Dialog open={emailModalOpen} onOpenChange={() => {}}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enter Your Email</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
+    <div className="max-w-xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Answer Questions</h1>
+      <div className="mb-6">
+        <div>
+          <b>Name:</b> {customer.name} {customer.surname}
+        </div>
+        <div>
+          <b>Email:</b> {customer.email}
+        </div>
+        <div>
+          <b>Phone:</b> {customer.phone}
+        </div>
+      </div>
+      {questions.length === 0 ? (
+        <div>No questions found.</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">
+              Question {step + 1} of {questions.length}
+            </label>
+            <div className="mb-2 font-semibold">{questions[step].question}</div>
             <Input
-              id="emailInput"
-              name="emailInput"
-              type="email"
-              value={emailInput}
-              onChange={e => setEmailInput(e.target.value)}
-              placeholder="Enter your email"
+              value={answers[questions[step].id] || ""}
+              onChange={e => setAnswers(a => ({ ...a, [questions[step].id]: e.target.value }))}
+              className="w-full"
               required
-              disabled={loading}
             />
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-            <Button type="submit" isDisabled={loading}>
-              {loading ? "Checking..." : "Continue"}
+          </div>
+          <div className="flex gap-2 items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={saveAnswers}
+              isDisabled={saving}
+            >
+              {saving ? "Saving..." : "Save Progress"}
             </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep(s => Math.max(0, s - 1))}
+              isDisabled={step === 0}
+            >
+              Back
+            </Button>
+            {step < questions.length - 1 ? (
+              <Button
+                type="button"
+                onClick={() => setStep(s => Math.min(questions.length - 1, s + 1))}
+                isDisabled={!answers[questions[step].id]}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button type="submit" isDisabled={!answers[questions[step].id] || saving}>
+                Submit All
+              </Button>
+            )}
+            {saveMsg && <span className="text-green-600 text-sm ml-2">{saveMsg}</span>}
+          </div>
+        </form>
+      )}
     </div>
   );
 } 

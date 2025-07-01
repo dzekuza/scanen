@@ -74,7 +74,14 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="flex w-full max-w-lg flex-col gap-6 mx-auto p-6">
+    <div className="flex flex-col max-w-lg mx-auto p-6">
+      <div className="mb-4">
+        <a href="/profile" target="_blank" rel="noopener noreferrer">
+          <Button variant="outline">
+            View Public Business Page
+          </Button>
+        </a>
+      </div>
       <Tabs defaultValue="account">
         <TabsList>
           <TabsTrigger value="account">Account</TabsTrigger>

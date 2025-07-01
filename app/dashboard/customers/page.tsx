@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function CustomersPage() {
   const { setTitle } = useDashboardTitle();
@@ -81,15 +82,17 @@ export default function CustomersPage() {
       setLoading(false);
       return;
     }
-    const { error } = await supabase.from("customers").insert([
+    const fingerprint = uuidv4();
+    const { data: inserted, error } = await supabase.from("customers").insert([
       {
         name: customerName,
         surname: customerSurname,
         email: customerEmail,
         user_id: user.id,
         business_id: business.id,
+        fingerprint,
       },
-    ]);
+    ]).select("id, fingerprint").single();
     if (error) {
       setError(error.message);
     } else {
@@ -99,6 +102,10 @@ export default function CustomersPage() {
       setCustomerEmail("");
       setOpen(false);
       fetchCustomers();
+      // Generate and copy the answer link
+      const link = `${window.location.origin}/answer/start?user_id=${inserted.id}&token=${inserted.fingerprint}`;
+      await navigator.clipboard.writeText(link);
+      alert("Answer link copied to clipboard!\n" + link);
     }
     setLoading(false);
   };
@@ -120,10 +127,10 @@ export default function CustomersPage() {
     alert(`Preview proposal for ${customer.name} ${customer.surname}`);
   };
 
-  const handleCopyProposalLink = (customer: any) => {
-    const link = `${window.location.origin}/answer/start?customer_id=${customer.id}`;
-    navigator.clipboard.writeText(link);
-    alert("Proposal link copied to clipboard!");
+  const handleCopyAnswerLink = async (customer: any) => {
+    const link = `${window.location.origin}/answer/start?user_id=${customer.id}&token=${customer.fingerprint}`;
+    await navigator.clipboard.writeText(link);
+    alert("Answer link copied to clipboard!\n" + link);
   };
 
   return (
@@ -279,18 +286,9 @@ export default function CustomersPage() {
                       <Button size="sm" variant="secondary" onClick={() => handleEditCustomer(row)}>
                         Edit
                       </Button>
-                      <Button size="sm" variant="secondary" onClick={() => handleCopyProposalLink(row)}>
+                      <Button size="sm" variant="secondary" onClick={() => handleCopyAnswerLink(row)}>
                         Copy Link
                       </Button>
-                      <a
-                        href={`/answer/start?customer_id=${row.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <Button size="sm" variant="default">
-                          Start Answering
-                        </Button>
-                      </a>
                     </div>
                   );
                 }
