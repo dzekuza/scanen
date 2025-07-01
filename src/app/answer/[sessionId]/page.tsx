@@ -11,6 +11,9 @@ export default function AnswerPage({ params }: { params: { sessionId: string } }
   const [answers, setAnswers] = useState<{ [question_id: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [step, setStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   // Fetch session and questions
   useEffect(() => {
@@ -50,6 +53,8 @@ export default function AnswerPage({ params }: { params: { sessionId: string } }
 
   // Save progress (auto-save or on button)
   const saveAnswers = async () => {
+    setSaving(true);
+    setSaveMsg(null);
     await fetch("/api/customer-answers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -61,6 +66,9 @@ export default function AnswerPage({ params }: { params: { sessionId: string } }
         })),
       }),
     });
+    setSaving(false);
+    setSaveMsg("Progress saved!");
+    setTimeout(() => setSaveMsg(null), 2000);
   };
 
   // Submit (final)
@@ -94,25 +102,56 @@ export default function AnswerPage({ params }: { params: { sessionId: string } }
           <b>Phone:</b> {session.phone}
         </div>
       </div>
-      <form onSubmit={handleSubmit}>
-        {questions.map(q => (
-          <div key={q.id} className="mb-4">
-            <label className="block font-medium mb-1">{q.question}</label>
+      {questions.length === 0 ? (
+        <div>No questions found.</div>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block font-medium mb-1">
+              Question {step + 1} of {questions.length}
+            </label>
+            <div className="mb-2 font-semibold">{questions[step].question}</div>
             <Input
-              value={answers[q.id] || ""}
-              onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
+              value={answers[questions[step].id] || ""}
+              onChange={e => setAnswers(a => ({ ...a, [questions[step].id]: e.target.value }))}
               className="w-full"
               required
             />
           </div>
-        ))}
-        <div className="flex gap-2">
-          <Button type="button" onClick={saveAnswers} variant="outline">
-            Save Progress
-          </Button>
-          <Button type="submit">Submit All</Button>
-        </div>
-      </form>
+          <div className="flex gap-2 items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={saveAnswers}
+              isDisabled={saving}
+            >
+              {saving ? "Saving..." : "Save Progress"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStep(s => Math.max(0, s - 1))}
+              isDisabled={step === 0}
+            >
+              Back
+            </Button>
+            {step < questions.length - 1 ? (
+              <Button
+                type="button"
+                onClick={() => setStep(s => Math.min(questions.length - 1, s + 1))}
+                isDisabled={!answers[questions[step].id]}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button type="submit" isDisabled={!answers[questions[step].id] || saving}>
+                Submit All
+              </Button>
+            )}
+            {saveMsg && <span className="text-green-600 text-sm ml-2">{saveMsg}</span>}
+          </div>
+        </form>
+      )}
     </div>
   );
 } 
