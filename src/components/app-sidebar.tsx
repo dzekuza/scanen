@@ -148,6 +148,11 @@ const data = {
       icon: ClipboardListIcon,
     },
     {
+      name: "Answers",
+      url: "/dashboard/answers",
+      icon: ClipboardListIcon,
+    },
+    {
       name: "Word Assistant",
       url: "#",
       icon: FileIcon,

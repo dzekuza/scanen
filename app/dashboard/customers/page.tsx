@@ -27,6 +27,9 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { v4 as uuidv4 } from 'uuid';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 export default function CustomersPage() {
   const { setTitle } = useDashboardTitle();
@@ -40,12 +43,15 @@ export default function CustomersPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomers, setSelectedCustomers] = useState<any[]>([]);
-
-  useEffect(() => {
-    setTitle("Customers");
-    fetchCustomers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setTitle]);
+  const [activeTab, setActiveTab] = useState("customers");
+  const [pricing, setPricing] = useState<any[]>([]);
+  const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  const [editingPrice, setEditingPrice] = useState<any | null>(null);
+  const [priceHeadline, setPriceHeadline] = useState("");
+  const [priceDescription, setPriceDescription] = useState("");
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [pricingError, setPricingError] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   const fetchCustomers = async () => {
     if (!user) return;
@@ -60,6 +66,38 @@ export default function CustomersPage() {
     setCustomers(data || []);
     setLoading(false);
   };
+
+  useEffect(() => {
+    setTitle("Customers");
+    fetchCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setTitle]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data: business } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+      if (business) setBusinessId(business.id);
+    })();
+  }, [user]);
+
+  useEffect(() => {
+    if (!businessId) return;
+    (async () => {
+      setPricingLoading(true);
+      const { data, error } = await supabase
+        .from("pricing")
+        .select("id, headline, description, created_at")
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false });
+      setPricing(data || []);
+      setPricingLoading(false);
+    })();
+  }, [businessId]);
 
   const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +169,70 @@ export default function CustomersPage() {
     const link = `${window.location.origin}/answer/start?user_id=${customer.id}&token=${customer.fingerprint}`;
     await navigator.clipboard.writeText(link);
     alert("Answer link copied to clipboard!\n" + link);
+  };
+
+  const handleDeleteCustomer = async (customer: any) => {
+    if (!window.confirm(`Are you sure you want to delete ${customer.name} ${customer.surname}?`)) return;
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.from("customers").delete().eq("id", customer.id);
+    if (error) setError(error.message);
+    else fetchCustomers();
+    setLoading(false);
+  };
+
+  const handleOpenPricingModal = (price?: any) => {
+    setEditingPrice(price || null);
+    setPriceHeadline(price?.headline || "");
+    setPriceDescription(price?.description || "");
+    setPricingModalOpen(true);
+  };
+
+  const handleSavePrice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!businessId) return;
+    setPricingLoading(true);
+    setPricingError(null);
+    if (editingPrice) {
+      // Update
+      const { error } = await supabase
+        .from("pricing")
+        .update({ headline: priceHeadline, description: priceDescription })
+        .eq("id", editingPrice.id);
+      if (error) setPricingError(error.message);
+    } else {
+      // Insert
+      const { error } = await supabase
+        .from("pricing")
+        .insert([{ business_id: businessId, headline: priceHeadline, description: priceDescription }]);
+      if (error) setPricingError(error.message);
+    }
+    setPricingModalOpen(false);
+    setEditingPrice(null);
+    setPriceHeadline("");
+    setPriceDescription("");
+    // Refresh
+    const { data } = await supabase
+      .from("pricing")
+      .select("id, headline, description, created_at")
+      .eq("business_id", businessId)
+      .order("created_at", { ascending: false });
+    setPricing(data || []);
+    setPricingLoading(false);
+  };
+
+  const handleDeletePrice = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this price?")) return;
+    setPricingLoading(true);
+    await supabase.from("pricing").delete().eq("id", id);
+    // Refresh
+    const { data } = await supabase
+      .from("pricing")
+      .select("id, headline, description, created_at")
+      .eq("business_id", businessId)
+      .order("created_at", { ascending: false });
+    setPricing(data || []);
+    setPricingLoading(false);
   };
 
   return (
@@ -288,6 +390,9 @@ export default function CustomersPage() {
                       </Button>
                       <Button size="sm" variant="secondary" onClick={() => handleCopyAnswerLink(row)}>
                         Copy Link
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDeleteCustomer(row)}>
+                        Delete
                       </Button>
                     </div>
                   );

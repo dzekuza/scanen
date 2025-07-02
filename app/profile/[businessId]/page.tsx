@@ -1,143 +1,102 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/components/auth-provider";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LoginForm } from "@/components/login-form";
+import { useAuth } from "@/components/auth-provider";
 
-export default function ProfilePage() {
+export default function ProfilePage({ params }: { params: { businessId: string } }) {
+  const businessId = params.businessId;
   const { user } = useAuth();
   const [business, setBusiness] = useState<any>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [analyzedResults, setAnalyzedResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    logo_url: "",
-    email: "",
-    phone: "",
-  });
-  const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<{ [question_id: string]: string }>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!businessId) return;
     (async () => {
       setLoading(true);
       setError(null);
-      // Fetch business for this user
+      // Fetch business by businessId
       const { data, error } = await supabase
         .from("businesses")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("id", businessId)
         .single();
       if (data) {
         setBusiness(data);
-        setForm({
-          name: data.name || "",
-          description: data.description || "",
-          logo_url: data.logo_url || "",
-          email: data.email || "",
-          phone: data.phone || "",
-        });
-        // Fetch questions for this business
-        const { data: questionsData } = await supabase
-          .from("analyzed_questions")
-          .select("*")
-          .eq("business_id", data.id);
-        setQuestions(questionsData || []);
+        // Fetch all analyzed results for this business
+        const { data: resultsData } = await supabase
+          .from("analyzed_results")
+          .select("id, questions, created_at")
+          .eq("business_id", data.id)
+          .order("created_at", { ascending: false });
+        setAnalyzedResults(resultsData || []);
       } else {
         setBusiness(null);
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [businessId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
+  // Get latest analyzed questions
+  const latestQuestions = analyzedResults.length > 0
+    ? Object.entries(analyzedResults[0].questions || {})
+    : [];
+
+  const handleAnswerChange = (questionId: string, value: string) => {
+    setAnswers(a => ({ ...a, [questionId]: value }));
   };
 
-  const handleCreateBusiness = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setCreating(true);
-    setError(null);
-    setSuccess(null);
-    const { error } = await supabase.from("businesses").insert([
+    setSaving(true);
+    setSaveMsg(null);
+    // Save answers as a single row in customer_answers
+    const { error } = await supabase.from("customer_answers").insert([
       {
+        business_id: businessId,
         user_id: user.id,
-        name: form.name,
-        description: form.description,
-        logo_url: form.logo_url,
-        email: form.email,
-        phone: form.phone,
-      },
+        answers: answers,
+      }
     ]);
-    setCreating(false);
-    if (error) setError(error.message);
-    else {
-      setSuccess("Business page created!");
-      window.location.reload();
+    setSaving(false);
+    if (!error) {
+      // Send to n8n webhook
+      try {
+        await fetch("https://n8n.srv824584.hstgr.cloud/webhook/summarise", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: user.id,
+            business_id: businessId,
+            answers,
+            questions: Object.fromEntries(latestQuestions),
+          }),
+        });
+      } catch (err) {
+        // Ignore webhook errors for user experience
+      }
+      setSubmitted(true);
+    } else {
+      setSaveMsg(error.message || "Failed to submit answers.");
     }
   };
 
-  if (!user) {
-    // Not authenticated, show login/register form
+  if (!business) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <LoginForm />
-      </div>
-    );
-  }
-
-  if (loading) return <div>Loading...</div>;
-
-  if (!business) {
-    // No business, show create form (no sidebar)
-    return (
-      <div className="flex w-full max-w-lg flex-col gap-6 mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Business Page</CardTitle>
-            <CardDescription>
-              You need to create a business page to access your profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {user && (
-              <form onSubmit={handleCreateBusiness} className="grid gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="business-name">Business Name</Label>
-                  <Input id="business-name" name="name" value={form.name} onChange={handleChange} required />
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="business-description">Description</Label>
-                  <textarea id="business-description" name="description" value={form.description} onChange={handleChange} className="w-full border rounded p-2" required />
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="business-logo">Logo URL</Label>
-                  <Input id="business-logo" name="logo_url" value={form.logo_url} onChange={handleChange} />
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="business-email">Email</Label>
-                  <Input id="business-email" name="email" value={form.email} onChange={handleChange} required />
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="business-phone">Phone</Label>
-                  <Input id="business-phone" name="phone" value={form.phone} onChange={handleChange} />
-                </div>
-                {error && <div className="text-red-600 text-sm">{error}</div>}
-                {success && <div className="text-green-600 text-sm">{success}</div>}
-                <Button type="submit" isDisabled={creating}>{creating ? "Creating..." : "Create Business Page"}</Button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+        <div className="text-lg text-gray-500">Business not found.</div>
       </div>
     );
   }
@@ -171,15 +130,33 @@ export default function ProfilePage() {
             </Button>
           </div>
           <div className="mt-6">
-            <h2 className="text-lg font-semibold mb-2">Questions</h2>
-            {questions.length === 0 ? (
-              <div>No questions found for this business.</div>
-            ) : (
-              <ul className="list-disc pl-6">
-                {questions.map((q: any) => (
-                  <li key={q.id} className="mb-2">{q.question}</li>
-                ))}
-              </ul>
+            {/* Only show the public answer form below */}
+            {latestQuestions.length > 0 && !submitted && (
+              <div className="mt-10">
+                <h2 className="text-lg font-semibold mb-2">Submit Your Answers</h2>
+                {!user ? (
+                  <div className="mb-4 text-red-600">Please log in to answer questions.</div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    {latestQuestions.map(([qId, qVal]: [string, any], i) => (
+                      <div key={qId}>
+                        <Label htmlFor={`q_${qId}`}>{qVal}</Label>
+                        <Input
+                          id={`q_${qId}`}
+                          value={answers[qId] || ""}
+                          onChange={e => handleAnswerChange(qId, e.target.value)}
+                          required
+                        />
+                      </div>
+                    ))}
+                    {saveMsg && <div className="text-red-600 text-sm">{saveMsg}</div>}
+                    <Button type="submit" isDisabled={saving}>{saving ? "Submitting..." : "Submit Answers"}</Button>
+                  </form>
+                )}
+              </div>
+            )}
+            {submitted && (
+              <div className="mt-10 text-green-600 text-lg font-semibold">Thank you! Your answers have been submitted.</div>
             )}
           </div>
         </CardContent>
