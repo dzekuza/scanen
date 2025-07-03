@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { LoginForm } from "@/components/login-form";
 import { useAuth } from "@/components/auth-provider";
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { MultiStepForm } from '../../../components/ui/multistep-form';
+import { PromptBox } from '../../../components/ui/chatgpt-prompt-input';
 
 export default function ProfilePage({ params }: { params: { businessId: string } }) {
   const businessId = params.businessId;
@@ -20,6 +23,12 @@ export default function ProfilePage({ params }: { params: { businessId: string }
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const businessName = business?.name || '';
 
   useEffect(() => {
     if (!businessId) return;
@@ -93,6 +102,23 @@ export default function ProfilePage({ params }: { params: { businessId: string }
     }
   };
 
+  async function handleSendMessage(message: string) {
+    setChatMessages((msgs) => [...msgs, { role: 'user', content: message }]);
+    setChatLoading(true);
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessId, question: message, businessName }),
+      });
+      const data = await res.json();
+      setChatMessages((msgs) => [...msgs, { role: 'ai', content: data.answer || data.error || 'No answer.' }]);
+    } catch (e) {
+      setChatMessages((msgs) => [...msgs, { role: 'ai', content: 'Error contacting AI.' }]);
+    }
+    setChatLoading(false);
+  }
+
   if (!business) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -121,6 +147,49 @@ export default function ProfilePage({ params }: { params: { businessId: string }
           </div>
         </div>
       </div>
+      <div className="flex gap-4 my-8">
+        <Button onClick={() => setChatOpen(true)}>Chat with AI</Button>
+        <Button onClick={() => setFormOpen(true)} variant="outline">Answer in Form</Button>
+      </div>
+      {/* Chat Modal */}
+      <Dialog open={chatOpen} onOpenChange={setChatOpen}>
+        <DialogContent>
+          <div className="flex flex-col gap-4">
+            <div className="flex-1 overflow-y-auto max-h-96 bg-muted rounded p-4">
+              {chatMessages.length === 0 && <div className="text-muted-foreground text-center">Start the conversation with AI...</div>}
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={msg.role === 'user' ? 'text-right mb-2' : 'text-left mb-2'}>
+                  <span className={msg.role === 'user' ? 'inline-block bg-primary text-white rounded px-3 py-2' : 'inline-block bg-background border rounded px-3 py-2'}>
+                    {msg.content}
+                  </span>
+                </div>
+              ))}
+              {chatLoading && <div className="text-center text-muted-foreground">AI is thinking...</div>}
+            </div>
+            <PromptBox
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  const value = chatInput.trim();
+                  if (value) {
+                    await handleSendMessage(value);
+                    setChatInput('');
+                  }
+                }
+              }}
+              placeholder="Type your question and press Enter..."
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Form Modal */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent>
+          <MultiStepForm onSubmit={(data) => { setFormOpen(false); /* handle form data */ }} />
+        </DialogContent>
+      </Dialog>
       {/* Questions section */}
       <div className="max-w-2xl mx-auto p-6">
         <div className="bg-white rounded-lg shadow p-6">
