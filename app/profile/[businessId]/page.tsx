@@ -150,7 +150,7 @@ export default function ProfilePage({ params }: { params: { businessId: string }
                       </div>
                     ))}
                     {saveMsg && <div className="text-red-600 text-sm">{saveMsg}</div>}
-                    <Button type="submit" isDisabled={saving}>{saving ? "Submitting..." : "Submit Answers"}</Button>
+                    <Button type="submit" disabled={saving}>{saving ? "Submitting..." : "Submit Answers"}</Button>
                   </form>
                 )}
               </div>

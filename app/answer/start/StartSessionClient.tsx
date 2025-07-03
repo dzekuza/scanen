@@ -110,7 +110,7 @@ export default function StartSessionClient() {
               type="button"
               variant="outline"
               onClick={saveAnswers}
-              isDisabled={saving}
+              disabled={saving}
             >
               {saving ? "Saving..." : "Save Progress"}
             </Button>
@@ -118,7 +118,7 @@ export default function StartSessionClient() {
               type="button"
               variant="secondary"
               onClick={() => setStep(s => Math.max(0, s - 1))}
-              isDisabled={step === 0}
+              disabled={step === 0}
             >
               Back
             </Button>
@@ -126,12 +126,12 @@ export default function StartSessionClient() {
               <Button
                 type="button"
                 onClick={() => setStep(s => Math.min(questions.length - 1, s + 1))}
-                isDisabled={!answers[questions[step].id]}
+                disabled={!answers[questions[step].id]}
               >
                 Next
               </Button>
             ) : (
-              <Button type="submit" isDisabled={!answers[questions[step].id] || saving}>
+              <Button type="submit" disabled={!answers[questions[step].id] || saving}>
                 Submit All
               </Button>
             )}

@@ -178,7 +178,7 @@ export function DataLibrary() {
               accept=".pdf"
               className="max-w-xs"
             />
-            <Button onClick={handleUpload} isDisabled={isUploading || !file}>
+            <Button onClick={handleUpload} disabled={isUploading || !file}>
               {isUploading ? "Uploading..." : "Upload"}
             </Button>
           </div>

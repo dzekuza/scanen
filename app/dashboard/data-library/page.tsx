@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabaseClient"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useDashboardTitle } from "@/components/dashboard-title-context"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
@@ -11,8 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -23,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusIcon, GlobeIcon, FileTextIcon, UploadIcon } from "lucide-react"
 import {
   ColumnDef,
   flexRender,
@@ -38,6 +40,9 @@ import {
 } from "@tanstack/react-table"
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog"
+import { ImageUploadDemo } from "@/components/ui/image-upload-demo"
+import { Badge } from "@/components/ui/badge"
+import { AlertCircleIcon, BadgeCheckIcon, CheckIcon } from "lucide-react"
 
 interface FileMeta {
   filename: string
@@ -45,6 +50,10 @@ interface FileMeta {
   uploaded_at: string
   url: string
 }
+
+const DATA_SOURCES = [
+  { id: 1, name: "scanen.vercel.app", type: "Website", usedBy: ["Lyro", "Copilot"], updated: "Jul 3, 2025, 10:42 PM" },
+];
 
 export default function DataLibraryPage() {
   const { user } = useAuth()
@@ -71,12 +80,158 @@ export default function DataLibraryPage() {
   const [pricingLoading, setPricingLoading] = useState(false)
   const [pricingError, setPricingError] = useState<string | null>(null)
   const [businessId, setBusinessId] = useState<string | null>(null)
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
 
   // DataTable state
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+
+  // Website tab state (from chatbot page)
+  const [websiteModalOpen, setWebsiteModalOpen] = useState(false);
+  const [websiteStep, setWebsiteStep] = useState(0);
+  const [websiteSelectedType, setWebsiteSelectedType] = useState<string | null>(null);
+  const [websiteUrls, setWebsiteUrls] = useState<string[]>([""]);
+  const [websiteSelectedRows, setWebsiteSelectedRows] = useState<number[]>([]);
+
+  // Remove all tab state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalStep, setModalStep] = useState(0);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+
+  // Modal state for business knowledge
+  const [businessKnowledgeMode, setBusinessKnowledgeMode] = useState<'csv' | 'manual'>('csv');
+  const [businessKnowledgeText, setBusinessKnowledgeText] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // Modal state for pricing
+  const [pricingName, setPricingName] = useState('');
+  const [pricingDescription, setPricingDescription] = useState('');
+  const [pricingValue, setPricingValue] = useState('');
+
+  // Add loading state for modal save
+  const [modalSaving, setModalSaving] = useState(false);
+
+  // Unified data (merge uploadedFiles, businessFiles, pricing, DATA_SOURCES, etc.)
+  const unifiedData = React.useMemo(() => {
+    // Example mapping, real logic should merge all sources
+    const docs = uploadedFiles.map(f => ({
+      id: f.filename,
+      contentType: "Proposal",
+      fileName: f.original_name,
+      uploadedAt: f.uploaded_at,
+      updatedAt: f.uploaded_at,
+      analyzed: false, // TODO: real logic
+    }));
+    const business = businessFiles.map(f => ({
+      id: f.filename,
+      contentType: "Business knowledge",
+      fileName: f.original_name,
+      uploadedAt: f.uploaded_at,
+      updatedAt: f.uploaded_at,
+      analyzed: false,
+    }));
+    const prices = pricing.map(p => ({
+      id: p.id,
+      contentType: "Pricing",
+      fileName: p.headline,
+      uploadedAt: p.created_at,
+      updatedAt: p.created_at,
+      analyzed: false,
+    }));
+    const websites = DATA_SOURCES.map(w => ({
+      id: w.id,
+      contentType: "Website data",
+      fileName: w.name,
+      uploadedAt: w.updated,
+      updatedAt: w.updated,
+      analyzed: false,
+    }));
+    return [...docs, ...business, ...prices, ...websites];
+  }, [uploadedFiles, businessFiles, pricing]);
+
+  // Table columns
+  const columns: ColumnDef<any>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+            onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={value => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    { accessorKey: "contentType", header: "Content type" },
+    { accessorKey: "fileName", header: "File name" },
+    { accessorKey: "uploadedAt", header: "Uploaded at", cell: ({ row }) => new Date(row.original.uploadedAt).toLocaleString() },
+    { accessorKey: "updatedAt", header: "Updated at", cell: ({ row }) => new Date(row.original.updatedAt).toLocaleString() },
+    {
+      accessorKey: "analyzed",
+      header: "Analyzed",
+      cell: ({ row }) => row.original.analyzed ? (
+        <Badge variant="secondary" className="bg-green-500 text-white flex items-center gap-1"><CheckIcon className="w-4 h-4" /> <span className="text-white">Analyzed</span></Badge>
+      ) : (
+        <Badge variant="destructive" className="bg-red-600 text-white flex items-center gap-1"><AlertCircleIcon className="w-4 h-4" /> <span className="text-white">Not analyzed</span></Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right w-full">Actions</div>,
+      cell: ({ row }) => (
+        <div className="flex justify-end w-full">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon"><MoreHorizontal className="w-5 h-5" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600">Remove</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+  ];
+
+  const table = useReactTable({
+    data: unifiedData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: { rowSelection },
+    onRowSelectionChange: setRowSelection,
+    enableRowSelection: true,
+  });
+
+  // Multistep modal logic
+  const handleTypeSelect = (type: string) => {
+    setSelectedType(type);
+    setModalStep(1);
+    if (type === "Website data") setWebsiteUrls([""]); // reset URLs
+  };
+  const handleModalBack = () => {
+    if (modalStep === 0) setModalOpen(false);
+    else setModalStep(s => s - 1);
+  };
 
   React.useEffect(() => {
     if (!user) return
@@ -196,6 +351,7 @@ export default function DataLibraryPage() {
     if (activeTab === "uploaded") setTitle("Your Uploaded Files")
     else if (activeTab === "shared") setTitle("My business data")
     else if (activeTab === "pricing") setTitle("Pricing")
+    else if (activeTab === "website") setTitle("Website")
     // Add more as needed
   }, [activeTab, setTitle])
 
@@ -397,326 +553,198 @@ export default function DataLibraryPage() {
     setPricingLoading(false);
   };
 
-  // DataTable columns
-  const columns: ColumnDef<FileMeta>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "original_name",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          File Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("original_name")}</div>,
-    },
-    {
-      accessorKey: "uploaded_at",
-      header: "Uploaded At",
-      cell: ({ row }) => <div>{new Date(row.getValue("uploaded_at")).toLocaleString()}</div>,
-    },
-    {
-      id: "download",
-      header: "Download",
-      cell: ({ row }) => {
-        const file = row.original
-        return (
-          <a
-            href={file.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-blue-600 hover:text-blue-800"
-          >
-            Download
-          </a>
-        )
-      },
-      enableSorting: false,
-      enableHiding: false,
-    },
-  ]
+  // Modal step handlers
+  const handleWebsiteTypeSelect = (type: string) => {
+    setWebsiteSelectedType(type);
+    setWebsiteStep(1);
+  };
+  const handleWebsiteUrlChange = (idx: number, value: string) => {
+    setWebsiteUrls(urls => urls.map((u, i) => (i === idx ? value : u)));
+  };
+  const addWebsiteUrlField = () => setWebsiteUrls(urls => [...urls, ""]);
+  // Table row selection
+  const toggleWebsiteRow = (id: number) => {
+    setWebsiteSelectedRows(rows => rows.includes(id) ? rows.filter(r => r !== id) : [...rows, id]);
+  };
 
-  const table = useReactTable({
-    data: uploadedFiles,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-    },
-  })
+  // Save handler for modal
+  const handleModalSave = async () => {
+    setModalSaving(true);
+    try {
+      if (selectedType === "Pricing") {
+        if (!pricingName || !pricingValue) throw new Error("Service name and price are required");
+        if (!businessId) throw new Error("No business ID found");
+        const { error } = await supabase.from("pricing").insert({
+          business_id: businessId,
+          headline: pricingName,
+          description: pricingDescription,
+          price: parseFloat(pricingValue),
+        });
+        if (error) throw error;
+      }
+      // Proposals and Business knowledge (CSV) handled by ImageUploadDemo, but ensure metadata is inserted
+      // (Assume ImageUploadDemo already uploads to storage and inserts metadata into documents)
+      // If you want to handle manual insertion here, add logic as needed
+      setModalOpen(false);
+      // Optionally, refresh data here
+    } catch (err) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Failed to save");
+      }
+    } finally {
+      setModalSaving(false);
+    }
+  };
 
   return (
     <div className="px-4 lg:px-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="uploaded">My proposals</TabsTrigger>
-          <TabsTrigger value="shared">My business data</TabsTrigger>
-          <TabsTrigger value="pricing">Pricing</TabsTrigger>
-        </TabsList>
-        <TabsContent value="uploaded">
-          <div className="w-full">
-            <div className="flex items-center gap-2 py-4">
-              <Input
-                type="file"
-                onChange={handleFileChange}
-                accept=".pdf"
-                className="max-w-xs"
-              />
-              <Button onClick={handleUpload} isDisabled={isUploading || !file}>
-                {isUploading ? "Uploading..." : "Upload"}
-              </Button>
-              {uploadMessage && (
-                <span className="text-sm text-muted-foreground ml-4">{uploadMessage}</span>
-              )}
-            </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        return (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
-                          </TableHead>
-                        )
-                      })}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        data-state={row.getIsSelected() && "selected"}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center"
-                      >
-                        No results.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="flex items-center justify-end space-x-2 py-4">
-              <div className="text-muted-foreground flex-1 text-sm">
-                {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                {table.getFilteredRowModel().rows.length} row(s) selected.
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex gap-2">
+          <Button onClick={() => { setModalOpen(true); setModalStep(0); setSelectedType(null); }}>
+            <PlusIcon className="mr-2 h-4 w-4" /> Add new
+          </Button>
+          <Button
+            variant="default"
+            disabled={Object.keys(rowSelection).length === 0}
+            onClick={() => {/* TODO: handle analyze action */}}
+          >
+            Analyze
+          </Button>
+        </div>
+      </div>
+      <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-lg">
+          {modalStep === 0 && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Select content type</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {["Proposals", "Business knowledge", "Pricing", "Website data"].map(type => (
+                  <Button key={type} variant={selectedType === type ? "default" : "outline"} onClick={() => handleTypeSelect(type)}>{type}</Button>
+                ))}
               </div>
-              <div className="space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  isDisabled={!table.getCanPreviousPage()}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  isDisabled={!table.getCanNextPage()}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-        <TabsContent value="shared">
-          <div className="w-full">
-            <div className="flex items-center gap-2 py-4">
-              {businesses.length > 1 && (
-                <select
-                  value={selectedBusinessId}
-                  onChange={e => setSelectedBusinessId(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm"
-                >
-                  {businesses.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              )}
-              <Input
-                type="file"
-                onChange={handleBusinessFileChange}
-                accept=".pdf"
-                className="max-w-xs"
-              />
-              <Button onClick={handleBusinessUpload} isDisabled={isBusinessUploading || !businessFile}>
-                {isBusinessUploading ? "Uploading..." : "Upload"}
-              </Button>
-              {businessUploadMessage && (
-                <span className="text-sm text-muted-foreground ml-4">{businessUploadMessage}</span>
-              )}
-            </div>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>File Name</TableHead>
-                    <TableHead>Uploaded At</TableHead>
-                    <TableHead>Download</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {businessFiles.length ? (
-                    businessFiles.map((file) => (
-                      <TableRow key={file.filename}>
-                        <TableCell>{file.original_name}</TableCell>
-                        <TableCell>{new Date(file.uploaded_at).toLocaleString()}</TableCell>
-                        <TableCell>
-                          <a
-                            href={file.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="underline text-blue-600 hover:text-blue-800"
-                          >
-                            Download
-                          </a>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="h-24 text-center">
-                        No results.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </TabsContent>
-        <TabsContent value="pricing">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => handleOpenPricingModal()}>Add Price</Button>
-          </div>
-          {pricingLoading ? (
-            <div className="p-8 text-center">Loading pricing...</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {pricing.map(price => (
-                <Card key={price.id}>
-                  <CardHeader>
-                    <CardTitle>{price.headline}</CardTitle>
-                    <CardDescription>{price.description}</CardDescription>
-                    {price.price !== null && price.price !== undefined && (
-                      <div className="mt-2 text-lg font-bold">{price.price} €</div>
-                    )}
-                  </CardHeader>
-                  <CardFooter className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => handleOpenPricingModal(price)}>Update</Button>
-                    <Button size="sm" variant="destructive" onClick={() => handleDeletePrice(price.id)}>Remove</Button>
-                  </CardFooter>
-                </Card>
-              ))}
             </div>
           )}
-          <Dialog open={pricingModalOpen} onOpenChange={setPricingModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingPrice ? "Update Price" : "Add Price"}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSavePrice} className="space-y-4">
+          {modalStep === 1 && selectedType && (
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Add {selectedType}</h2>
+              {selectedType === "Website data" && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Headline</label>
+                  <label className="block text-sm font-medium mb-2">Website URLs</label>
+                  {websiteUrls.map((url, idx) => (
+                    <div key={idx} className="flex gap-2 mb-2">
+                      <Input
+                        placeholder="https://example.com"
+                        value={url}
+                        onChange={e => setWebsiteUrls(urls => urls.map((u, i) => i === idx ? e.target.value : u))}
+                      />
+                      {websiteUrls.length > 1 && (
+                        <Button variant="destructive" size="icon" onClick={() => setWebsiteUrls(urls => urls.filter((_, i) => i !== idx))}>-</Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button variant="outline" onClick={() => setWebsiteUrls(urls => [...urls, ""])} className="w-full mb-2">+ Add another URL</Button>
+                </div>
+              )}
+              {selectedType === "Proposals" && (
+                <div className="mb-4">
+                  <ImageUploadDemo />
+                </div>
+              )}
+              {selectedType === "Business knowledge" && (
+                <div className="mb-4">
+                  <div className="flex gap-2 mb-2">
+                    <Button
+                      variant={businessKnowledgeMode === 'csv' ? 'default' : 'outline'}
+                      onClick={() => setBusinessKnowledgeMode('csv')}
+                    >
+                      Upload CSV
+                    </Button>
+                    <Button
+                      variant={businessKnowledgeMode === 'manual' ? 'default' : 'outline'}
+                      onClick={() => setBusinessKnowledgeMode('manual')}
+                    >
+                      Write manually
+                    </Button>
+                  </div>
+                  {businessKnowledgeMode === 'csv' ? (
+                    <ImageUploadDemo />
+                  ) : (
+                    <textarea
+                      className="w-full px-3 py-2 rounded border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+                      rows={5}
+                      placeholder="Enter business knowledge manually..."
+                      value={businessKnowledgeText}
+                      onChange={e => setBusinessKnowledgeText(e.target.value)}
+                    />
+                  )}
+                </div>
+              )}
+              {selectedType === "Pricing" && (
+                <div className="mb-4 space-y-2">
                   <Input
-                    value={priceHeadline}
-                    onChange={e => setPriceHeadline(e.target.value)}
-                    required
+                    placeholder="Service name"
+                    value={pricingName}
+                    onChange={e => setPricingName(e.target.value)}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    value={priceDescription}
-                    onChange={e => setPriceDescription(e.target.value)}
-                    className="w-full px-3 py-2 rounded border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                    rows={3}
-                    required
+                  <Input
+                    placeholder="Description"
+                    value={pricingDescription}
+                    onChange={e => setPricingDescription(e.target.value)}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Price (€)</label>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
-                    value={priceValue}
-                    onChange={e => setPriceValue(e.target.value)}
-                    required
+                    placeholder="Price (€)"
+                    value={pricingValue}
+                    onChange={e => setPricingValue(e.target.value)}
                   />
                 </div>
-                {pricingError && <div className="text-red-600 text-sm">{pricingError}</div>}
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
-                  </DialogClose>
-                  <Button type="submit" variant="default">{editingPrice ? "Update" : "Add"}</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-      </Tabs>
+              )}
+              <div className="flex justify-between mt-6">
+                <Button variant="secondary" onClick={handleModalBack} disabled={modalSaving}>Back</Button>
+                <Button onClick={handleModalSave} disabled={modalSaving}>{modalSaving ? "Saving..." : "Save"}</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

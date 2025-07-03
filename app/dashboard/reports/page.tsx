@@ -148,7 +148,7 @@ export default function ReportsPage() {
                           <Button
                             size="sm"
                             onClick={() => handleSave(result, qKey)}
-                            isDisabled={saving === `${result.id}-${qKey}`}
+                            disabled={saving === `${result.id}-${qKey}`}
                           >
                             {saving === `${result.id}-${qKey}` ? "Saving..." : "Save"}
                           </Button>

@@ -7,6 +7,7 @@
   overflow: hidden;
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
 }
 
@@ -44,9 +45,12 @@
 .hero-content {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 32px;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  max-width: 375px;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .hero-header {
@@ -56,46 +60,54 @@
 }
 
 /* Rating Badge */
-.rating-badge {
+.badge {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 16px 4px 12px;
-  background: #fff;
-  border: 1px solid var(--primary-100);
-  border-radius: 100px;
-  height: 40px;
-  width: fit-content;
+  justify-content: center;
+  background: linear-gradient(90deg, #fff 80%, #f6f3ff 100%);
+  border: 1.5px solid #dee5ff;
+  border-radius: 999px;
+  padding: 8px 28px 8px 20px;
+  box-shadow: 0 2px 12px 0 rgba(64,47,211,0.04);
+  min-width: unset;
+  margin: 0 auto 0 auto;
+  height: 48px;
 }
 
-.stars-container {
+.badge-content {
   display: flex;
   align-items: center;
-  gap: -2px;
+  gap: 14px;
+}
+
+.badge-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .star-icon {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  filter: none;
 }
 
-.rating-text {
-  color: var(--primary-700);
-  font-family:
-    "Satoshi",
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  font-size: 14px;
+.badge-text {
+  color: #402fd3;
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 22px;
   white-space: nowrap;
 }
 
-.rating-number {
+.badge-number {
   font-weight: 700;
+  color: #402fd3;
+  margin-right: 2px;
+  font-size: 16px;
 }
 
 /* Hero Title */
@@ -106,22 +118,25 @@
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
-  font-size: 48px;
+  font-size: 64px;
   font-weight: 700;
-  line-height: 56px;
-  letter-spacing: -0.48px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
   color: #09090b;
   margin: 0;
-  text-transform: capitalize;
+  text-align: center;
+  text-transform: none;
 }
 
 .title-highlight {
-  color: var(--primary-600);
+  color: #4b3dee;
+  font-style: italic;
+  font-weight: 700;
 }
 
 /* Hero Description */
 .hero-description {
-  color: var(--neutral-800);
+  color: #27272A;
   font-family:
     "Satoshi",
     "Inter",
@@ -132,6 +147,7 @@
   font-weight: 400;
   line-height: 24px;
   margin: 0;
+  text-align: center;
 }
 
 /* CTA Button */
@@ -143,14 +159,18 @@
 .cta-button {
   display: flex;
   align-items: center;
-  background: var(--primary-500);
+  justify-content: center;
+  background: #5C5BF9;
   border: none;
   border-radius: 100px;
-  padding: 20px 24px;
+  padding: 0 32px;
+  height: 56px;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
   overflow: visible;
+  margin: 0 auto;
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .cta-button:hover {
@@ -159,37 +179,22 @@
 }
 
 .cta-text {
-  color: var(--neutral-50);
-  font-family:
-    "Satoshi",
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+  color: #FAFAFA;
   font-size: 18px;
   font-weight: 500;
   line-height: 24px;
-  text-transform: capitalize;
+  text-transform: none;
+  margin-right: 16px;
 }
 
 .cta-icon-container {
-  position: absolute;
-  right: -32px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 64px;
-  height: 64px;
-  background: var(--primary-500);
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.cta-button:hover .cta-icon-container {
-  background: #4b4ae8;
-  transform: translateY(-50%) translateX(4px);
+  width: 40px;
+  height: 40px;
+  background: #4b3dee;
+  border-radius: 50%;
 }
 
 .cta-arrow {
@@ -270,4 +275,16 @@
   .hero-content {
     max-width: 800px;
   }
+}
+
+.background-svg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 60vw;
+  max-width: 700px;
+  height: auto;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
 } 

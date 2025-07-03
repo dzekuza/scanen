@@ -1,33 +1,40 @@
 /* Problem Section Styles */
 .problem-section {
   background: #fff;
-  padding: 64px 20px;
+  padding: 80px 0 80px 0;
   min-height: auto;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .problem-container {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 32px;
 }
 
 /* Problem Badge */
 .problem-badge {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 16px 4px 12px;
+  gap: 10px;
+  padding: 6px 18px 6px 12px;
   background: #fff;
-  border: 1px solid var(--primary-100);
-  border-radius: 100px;
-  height: 40px;
-  width: fit-content;
+  border: 1.5px solid #dee5ff;
+  border-radius: 999px;
+  box-shadow: 0 2px 12px 0 rgba(64,47,211,0.04);
+  font-size: 15px;
+  font-weight: 500;
+  color: #402fd3;
 }
 
 .badge-content {
   display: flex;
   align-items: center;
-  gap: -2px;
+  gap: 8px;
 }
 
 .lightbulb-icon {
@@ -37,25 +44,21 @@
 }
 
 .badge-text {
-  color: var(--primary-700);
-  font-family:
-    "Satoshi",
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  font-size: 14px;
+  color: #402fd3;
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
   font-weight: 500;
-  line-height: 16px;
+  line-height: 18px;
   white-space: nowrap;
 }
 
 /* Problem Main Content */
 .problem-main {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 32px;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 48px;
   width: 100%;
 }
 
@@ -115,65 +118,59 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
-  width: 100%;
+  gap: 32px;
+  width: 50%;
+  min-width: 340px;
+  max-width: 520px;
+  justify-content: center;
+  height: 100%;
 }
 
 .problem-title {
-  width: 100%;
   color: #18181b;
-  font-family:
-    "Satoshi",
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  font-size: 32px;
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 40px;
   font-weight: 700;
-  line-height: 40px;
-  letter-spacing: -0.32px;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
   margin: 0;
-  opacity: 1;
-  visibility: visible;
+  text-align: left;
 }
 
 .problem-description {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
 }
 
 .problem-paragraph {
-  width: 100%;
   color: #3f3f47;
-  font-family:
-    "Satoshi",
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 16px;
   font-weight: 400;
   line-height: 24px;
   margin: 0;
-  opacity: 1;
-  visibility: visible;
+  text-align: left;
 }
 
 /* Problem CTA */
 .problem-cta {
   display: flex;
-  padding: 16px 16px 16px 20px;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
+  padding: 16px 24px 16px 24px;
   border-radius: 100px;
-  background: var(--primary-500);
+  background: #5C5BF9;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  font-family: 'Satoshi', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #FAFAFA;
+  gap: 10px;
+  margin-top: 8px;
 }
 
 .problem-cta:hover {
@@ -181,35 +178,83 @@
   transform: translateY(-2px);
 }
 
-.problem-cta .cta-text {
-  color: var(--neutral-50);
-  font-family:
-    "Satoshi",
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 24px;
-  text-transform: capitalize;
-}
-
 .cta-arrow-container {
   display: flex;
   width: 24px;
   height: 24px;
-  justify-content: center;
-  align-items: center;
 }
 
 .cta-arrow-down {
   width: 24px;
   height: 24px;
-  flex-shrink: 0;
+}
+
+.problem-image-bg {
+  position: relative;
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 420px;
+}
+
+.problem-image-bg::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  min-width: 420px;
+  min-height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, #f6f3ff 0%, #fff 80%);
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.problem-image {
+  position: relative;
+  height: 100%;
+  max-height: 520px;
+  width: auto;
+  max-width: 90%;
+  z-index: 1;
+  display: block;
+  object-fit: contain;
 }
 
 /* Responsive Design */
+@media (max-width: 900px) {
+  .problem-main {
+    flex-direction: column;
+    gap: 32px;
+    align-items: center;
+  }
+  .problem-text, .problem-image-bg {
+    width: 100%;
+    max-width: 100%;
+    min-width: unset;
+    height: auto;
+  }
+  .problem-image-bg {
+    min-height: 320px;
+  }
+  .problem-image-bg::before {
+    min-width: 320px;
+    min-height: 320px;
+    width: 100%;
+    height: 100%;
+  }
+  .problem-image {
+    height: 220px;
+    max-height: 220px;
+    width: auto;
+  }
+}
+
 @media (min-width: 768px) {
   .problem-section {
     padding: 80px 32px;

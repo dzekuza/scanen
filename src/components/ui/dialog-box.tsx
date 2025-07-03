@@ -271,11 +271,11 @@ export function BusinessDetailsModal({ open, onOpenChange }: { open: boolean, on
               type="button"
               variant="secondary"
               onClick={() => setStep(s => Math.max(0, s - 1))}
-              isDisabled={step === 0 || loading}
+              disabled={step === 0 || loading}
             >
               Back
             </Button>
-            <Button type="submit" isDisabled={loading || !user}>
+            <Button type="submit" disabled={loading || !user}>
               {loading ? "Saving..." : step === steps.length - 1 ? "Submit" : "Next"}
             </Button>
           </div>

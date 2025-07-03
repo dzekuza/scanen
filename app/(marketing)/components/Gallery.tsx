@@ -4,14 +4,29 @@ import React, { useState } from 'react';
 import styles from './Gallery.module.css';
 
 const images = [
-  '/icons/Rectangle 2.png',
-  'http://localhost:3845/assets/8fbf2d82fbef37e89054740cc3374815c97080b7.svg',
-  'http://localhost:3845/assets/6c04551600080e28e8100da74bb6e0cd93f98953.svg',
-  // Add more images as needed
+  '/icons/docs ex/Frame 80.png',
+  '/icons/docs ex/Frame 81.png',
+  '/icons/docs ex/Frame 82.png',
+  '/icons/docs ex/Frame 83.png',
+  '/icons/docs ex/Frame 84.png',
+  '/icons/docs ex/Frame 85.png',
+  '/icons/docs ex/Frame 86.png',
 ];
 
+const VISIBLE_COUNT = 4; // Show 4 at a time (adjust for responsive if needed)
+
 export default function Gallery() {
-  const [active, setActive] = useState(0);
+  const [start, setStart] = useState(0);
+
+  const canGoLeft = start > 0;
+  const canGoRight = start + VISIBLE_COUNT < images.length;
+
+  const handleLeft = () => {
+    if (canGoLeft) setStart(start - 1);
+  };
+  const handleRight = () => {
+    if (canGoRight) setStart(start + 1);
+  };
 
   return (
     <section className={styles['gallery-section']}>
@@ -27,20 +42,29 @@ export default function Gallery() {
           <p className={styles['gallery-desc']}>Explore real AI-generated proposals — polished, branded, and ready to impress.</p>
         </div>
         <div className={styles['gallery-main']}>
-          <div className={styles['gallery-image-wrapper']}>
-            <img className={styles['gallery-image']} src={images[active]} alt="Gallery Example" />
-          </div>
-          <div className={styles['gallery-carousel']}>
-            {images.map((_, idx) => (
-              <span
-                key={idx}
-                className={
-                  `${styles['gallery-dot']} ${idx === active ? styles['gallery-dot--active'] : ''}`
-                }
-                onClick={() => setActive(idx)}
-              />
+          <button className={styles['gallery-arrow']} onClick={handleLeft} disabled={!canGoLeft} aria-label="Previous">
+            &#60;
+          </button>
+          <div className={styles['gallery-slider']}>
+            {images.slice(start, start + VISIBLE_COUNT).map((src, idx) => (
+              <div className={styles['gallery-image-wrapper']} key={src}>
+                <img className={styles['gallery-image']} src={src} alt={`Gallery Example ${start + idx + 1}`} />
+              </div>
             ))}
           </div>
+          <button className={styles['gallery-arrow']} onClick={handleRight} disabled={!canGoRight} aria-label="Next">
+            &#62;
+          </button>
+        </div>
+        <div className={styles['gallery-carousel']}>
+          {images.map((_, idx) => (
+            <span
+              key={idx}
+              className={
+                `${styles['gallery-dot']} ${idx >= start && idx < start + VISIBLE_COUNT ? styles['gallery-dot--active'] : ''}`
+              }
+            />
+          ))}
         </div>
         <button className={styles['gallery-seeall-btn']}>
           See All

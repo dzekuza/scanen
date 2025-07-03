@@ -291,9 +291,9 @@ export default function CustomersPage() {
                 {success && <div className="text-green-600 text-sm">{success}</div>}
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button type="button" variant="outline" isDisabled={loading}>Cancel</Button>
+                    <Button type="button" variant="outline" disabled={loading}>Cancel</Button>
                   </DialogClose>
-                  <Button type="submit" isDisabled={loading}>{loading ? "Adding..." : "Add Customer"}</Button>
+                  <Button type="submit" disabled={loading}>{loading ? "Adding..." : "Add Customer"}</Button>
                 </DialogFooter>
               </form>
             </DialogContent>
@@ -301,7 +301,7 @@ export default function CustomersPage() {
           <Button
             size="sm"
             onClick={() => selectedCustomers.length > 0 && handleEditCustomer(selectedCustomers[0])}
-            isDisabled={selectedCustomers.length === 0}
+            disabled={selectedCustomers.length === 0}
           >
             Edit
           </Button>
@@ -310,21 +310,21 @@ export default function CustomersPage() {
           <Button
             size="sm"
             onClick={() => selectedCustomers.forEach(handleSendProposal)}
-            isDisabled={selectedCustomers.length === 0}
+            disabled={selectedCustomers.length === 0}
           >
             Send Proposal
           </Button>
           <Button
             size="sm"
             onClick={() => selectedCustomers.forEach(handleResendProposal)}
-            isDisabled={selectedCustomers.length === 0}
+            disabled={selectedCustomers.length === 0}
           >
             Resend
           </Button>
           <Button
             size="sm"
             onClick={() => selectedCustomers.forEach(handlePreviewProposal)}
-            isDisabled={selectedCustomers.length === 0}
+            disabled={selectedCustomers.length === 0}
           >
             Preview Proposal
           </Button>

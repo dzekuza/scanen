@@ -151,7 +151,7 @@ export default function AnswersPage() {
               <Button
                 onClick={handleAnalyseOffer}
                 className="w-full mb-3"
-                isDisabled={analyseLoading}
+                disabled={analyseLoading}
               >
                 {analyseLoading ? "Analysing..." : "Analyse Offer"}
               </Button>

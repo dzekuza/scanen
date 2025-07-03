@@ -17,6 +17,7 @@ import {
   SearchIcon,
   SettingsIcon,
   UsersIcon,
+  MessageCircleIcon,
 } from "lucide-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -32,12 +33,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/components/auth-provider"
 
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/icons/scanenlogo.svg",
+    avatar: "/icons/scanenlogonew.svg",
   },
   navMain: [
     {
@@ -69,6 +71,11 @@ const data = {
       title: "Customers",
       url: "/dashboard/customers",
       icon: UsersIcon,
+    },
+    {
+      title: "Chat bot",
+      url: "/dashboard/chatbot",
+      icon: MessageCircleIcon,
     },
   ],
   navClouds: [
@@ -161,6 +168,18 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, logout } = useAuth();
+  const navUser = user
+    ? {
+        name: user.user_metadata?.name || user.email || "User",
+        email: user.email || "",
+        avatar: user.user_metadata?.avatar_url || "/icons/scanenlogonew.svg",
+      }
+    : {
+        name: "Guest",
+        email: "",
+        avatar: "/icons/scanenlogonew.svg",
+      };
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -184,7 +203,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={navUser} />
       </SidebarFooter>
     </Sidebar>
   )

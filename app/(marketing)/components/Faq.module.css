@@ -6,12 +6,12 @@
 }
 .faq-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 32px;
-  align-items: flex-start;
+  align-items: center;
 }
 .faq-badge {
   display: flex;
@@ -23,6 +23,7 @@
   border-radius: 100px;
   height: 40px;
   width: fit-content;
+  margin: 0 auto;
 }
 .faq-badge-icon {
   width: 20px;
@@ -46,23 +47,30 @@
   font-weight: 700;
   line-height: 40px;
   letter-spacing: -0.32px;
-  margin: 0;
-  text-align: left;
+  margin: 0 auto 0 auto;
+  text-align: center;
 }
 .faq-list {
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  max-width: 800px;
+  align-items: center;
 }
 .faq-item {
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 16px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
+  background: #f6f8ff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(24, 24, 27, 0.04);
+  padding: 0;
+  border: none;
+  transition: box-shadow 0.2s;
+}
+.faq-item:focus-within, .faq-item:hover {
+  box-shadow: 0 4px 16px rgba(24, 24, 27, 0.08);
 }
 .faq-question-btn {
   display: flex;
@@ -72,8 +80,9 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
+  padding: 24px 32px;
   text-align: left;
+  border-radius: 14px;
 }
 .faq-question {
   color: #27272a;
@@ -102,13 +111,13 @@
   font-size: 16px;
   font-weight: 400;
   line-height: 24px;
-  margin: 0;
+  margin: 0 32px 24px 32px;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
 }
 .faq-answer.open {
-  max-height: 500px; /* Adjust as needed */
+  max-height: 500px;
   margin-top: 8px;
 }
 
@@ -123,17 +132,15 @@
     font-size: 40px;
     line-height: 48px;
   }
-  .faq-item {
-    padding-bottom: 24px;
-    gap: 24px;
-  }
-  .faq-question {
+  .faq-question-btn {
     font-size: 20px;
     line-height: 28px;
+    padding: 28px 40px;
   }
   .faq-answer {
     font-size: 18px;
     line-height: 28px;
+    margin: 0 40px 28px 40px;
   }
 }
 
@@ -142,7 +149,7 @@
     padding: 100px 64px;
   }
   .faq-container {
-    max-width: 1200px;
+    max-width: 800px;
     gap: 56px;
   }
   .faq-title {

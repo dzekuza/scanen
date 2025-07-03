@@ -46,17 +46,7 @@ export function SiteHeader({ userEmail, onLogout, title = "Documents" }: SiteHea
               >
                 View Public Business Page
               </a>
-            ) : (
-              <span className="text-xs text-muted-foreground">{userEmail}</span>
-            )}
-            {onLogout && (
-              <button
-                className="text-xs underline underline-offset-2 text-red-600 hover:text-red-800"
-                onClick={onLogout}
-              >
-                Logout
-              </button>
-            )}
+            ) : null}
           </div>
         )}
       </div>

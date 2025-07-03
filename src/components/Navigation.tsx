@@ -64,7 +64,7 @@ export default function Navigation() {
         <div className={styles.container}>
           <Link href="/" className={styles.logo}>
             <Image
-              src="/icons/scanenlogo.svg"
+              src="/icons/scanenlogonew.svg"
               alt="Scanen Logo"
               width={152}
               height={32}
@@ -107,7 +107,7 @@ export default function Navigation() {
         <div className={styles.mobileMenuHeader}>
           <Link href="/" className={styles.logo} onClick={toggleMenu}>
             <Image
-              src="/icons/scanenlogo.svg"
+              src="/icons/scanenlogonew.svg"
               alt="Scanen Logo"
               width={152}
               height={32}

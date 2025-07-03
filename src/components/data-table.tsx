@@ -557,7 +557,7 @@ export function DataTable<T>({
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
                 onClick={() => table.setPageIndex(0)}
-                isDisabled={!table.getCanPreviousPage()}
+                disabled={!table.getCanPreviousPage()}
               >
                 <span className="sr-only">Go to first page</span>
                 <ChevronsLeftIcon />
@@ -567,7 +567,7 @@ export function DataTable<T>({
                 className="size-8"
                 size="icon"
                 onClick={() => table.previousPage()}
-                isDisabled={!table.getCanPreviousPage()}
+                disabled={!table.getCanPreviousPage()}
               >
                 <span className="sr-only">Go to previous page</span>
                 <ChevronLeftIcon />
@@ -577,7 +577,7 @@ export function DataTable<T>({
                 className="size-8"
                 size="icon"
                 onClick={() => table.nextPage()}
-                isDisabled={!table.getCanNextPage()}
+                disabled={!table.getCanNextPage()}
               >
                 <span className="sr-only">Go to next page</span>
                 <ChevronRightIcon />
@@ -587,7 +587,7 @@ export function DataTable<T>({
                 className="hidden size-8 lg:flex"
                 size="icon"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                isDisabled={!table.getCanNextPage()}
+                disabled={!table.getCanNextPage()}
               >
                 <span className="sr-only">Go to last page</span>
                 <ChevronsRightIcon />

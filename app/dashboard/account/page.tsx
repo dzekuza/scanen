@@ -128,7 +128,7 @@ export default function AccountPage() {
                 {error && <div className="text-red-600 text-sm">{error}</div>}
                 {success && <div className="text-green-600 text-sm">{success}</div>}
                 <CardFooter className="p-0">
-                  <Button type="submit" isDisabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
+                  <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
                 </CardFooter>
               </form>
             </CardContent>
