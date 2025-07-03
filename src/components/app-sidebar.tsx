@@ -58,6 +58,11 @@ const data = {
       icon: UsersIcon,
     },
     {
+      title: "Project Settings",
+      url: "/dashboard/project-settings",
+      icon: SettingsIcon,
+    },
+    {
       title: "Chat bot",
       url: "/dashboard/chatbot",
       icon: MessageCircleIcon,

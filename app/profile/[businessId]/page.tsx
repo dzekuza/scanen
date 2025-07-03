@@ -103,64 +103,56 @@ export default function ProfilePage({ params }: { params: { businessId: string }
 
   // Show business profile and questions
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-6 mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{business.name}</CardTitle>
-          <CardDescription>{business.description}</CardDescription>
-          <div className="text-xs text-gray-500 mt-1">
-            <b>Business ID:</b> {business.id}
+    <div className="w-full min-h-screen bg-background">
+      {/* Banner section: full width, edge-to-edge */}
+      <div className="w-full px-0 mb-8">
+        <div className="relative w-full" style={{ minHeight: 220, height: 220 }}>
+          <div className="absolute inset-0 rounded-none overflow-hidden border-b border-muted-foreground/20" style={{ width: '100%', height: '100%' }}>
+            <img
+              src={business.cover_image_url || "/icons/scanenlogonew.svg"}
+              alt="Cover"
+              className="w-full h-full object-cover"
+              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+            />
+            <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-white drop-shadow mb-2">{business.name}</h1>
+              <p className="text-lg md:text-xl text-white drop-shadow mb-4 max-w-2xl">{business.description}</p>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {business.logo_url && (
-            <img src={business.logo_url} alt="Business Logo" className="mb-4 max-h-32" />
+        </div>
+      </div>
+      {/* Questions section */}
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          {latestQuestions.length > 0 && !submitted && (
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Submit Your Answers</h2>
+              {!user ? (
+                <div className="mb-4 text-red-600">Please log in to answer questions.</div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {latestQuestions.map(([qId, qVal]: [string, any], i) => (
+                    <div key={qId}>
+                      <Label htmlFor={`q_${qId}`}>{qVal}</Label>
+                      <Input
+                        id={`q_${qId}`}
+                        value={answers[qId] || ""}
+                        onChange={e => handleAnswerChange(qId, e.target.value)}
+                        required
+                      />
+                    </div>
+                  ))}
+                  {saveMsg && <div className="text-red-600 text-sm">{saveMsg}</div>}
+                  <Button type="submit" disabled={saving}>{saving ? "Submitting..." : "Submit Answers"}</Button>
+                </form>
+              )}
+            </div>
           )}
-          <div className="mb-2"><b>Email:</b> {business.email}</div>
-          <div className="mb-2"><b>Phone:</b> {business.phone}</div>
-          <div className="my-4">
-            <Button
-              variant="outline"
-              onClick={async () => {
-                await navigator.clipboard.writeText(window.location.href);
-                alert("Public page link copied to clipboard!\n" + window.location.href);
-              }}
-            >
-              Copy Public Page Link
-            </Button>
-          </div>
-          <div className="mt-6">
-            {/* Only show the public answer form below */}
-            {latestQuestions.length > 0 && !submitted && (
-              <div className="mt-10">
-                <h2 className="text-lg font-semibold mb-2">Submit Your Answers</h2>
-                {!user ? (
-                  <div className="mb-4 text-red-600">Please log in to answer questions.</div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    {latestQuestions.map(([qId, qVal]: [string, any], i) => (
-                      <div key={qId}>
-                        <Label htmlFor={`q_${qId}`}>{qVal}</Label>
-                        <Input
-                          id={`q_${qId}`}
-                          value={answers[qId] || ""}
-                          onChange={e => handleAnswerChange(qId, e.target.value)}
-                          required
-                        />
-                      </div>
-                    ))}
-                    {saveMsg && <div className="text-red-600 text-sm">{saveMsg}</div>}
-                    <Button type="submit" disabled={saving}>{saving ? "Submitting..." : "Submit Answers"}</Button>
-                  </form>
-                )}
-              </div>
-            )}
-            {submitted && (
-              <div className="mt-10 text-green-600 text-lg font-semibold">Thank you! Your answers have been submitted.</div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          {submitted && (
+            <div className="mt-10 text-green-600 text-lg font-semibold">Thank you! Your answers have been submitted.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 } 

@@ -1,6 +1,7 @@
 {
-  "/dashboard/customers/page": "app/dashboard/customers/page.js",
-  "/dashboard/data-library/page": "app/dashboard/data-library/page.js",
-  "/(marketing)/page": "app/(marketing)/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/profile/[businessId]/page": "app/profile/[businessId]/page.js",
+  "/dashboard/project-settings/page": "app/dashboard/project-settings/page.js",
+  "/dashboard/account/page": "app/dashboard/account/page.js",
+  "/dashboard/reports/page": "app/dashboard/reports/page.js",
+  "/dashboard/answers/page": "app/dashboard/answers/page.js"
 }
