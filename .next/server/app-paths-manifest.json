@@ -1,8 +1,16 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/files/route": "app/api/files/route.js",
+  "/answer/start/page": "app/answer/start/page.js",
+  "/api/upload/route": "app/api/upload/route.js",
   "/profile/[businessId]/page": "app/profile/[businessId]/page.js",
+  "/(marketing)/page": "app/(marketing)/page.js",
+  "/dashboard/chatbot/page": "app/dashboard/chatbot/page.js",
+  "/dashboard/account/page": "app/dashboard/account/page.js",
+  "/dashboard/reports/page": "app/dashboard/reports/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/data-library/page": "app/dashboard/data-library/page.js",
+  "/dashboard/customers/page": "app/dashboard/customers/page.js",
   "/dashboard/project-settings/page": "app/dashboard/project-settings/page.js",
-  "/dashboard/reports/page": "app/dashboard/reports/page.js"
+  "/dashboard/data-library/page": "app/dashboard/data-library/page.js",
+  "/dashboard/answers/page": "app/dashboard/answers/page.js"
 }

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label";
 import { LoginForm } from "@/components/login-form";
 import { useAuth } from "@/components/auth-provider";
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { MultiStepForm } from '../../../components/ui/multistep-form';
 import { PromptBox } from '../../../components/ui/chatgpt-prompt-input';
 
@@ -106,10 +106,11 @@ export default function ProfilePage({ params }: { params: { businessId: string }
     setChatMessages((msgs) => [...msgs, { role: 'user', content: message }]);
     setChatLoading(true);
     try {
+      const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessId, question: message, businessName }),
+        body: JSON.stringify({ businessId, question: message, businessName, pageUrl }),
       });
       const data = await res.json();
       setChatMessages((msgs) => [...msgs, { role: 'ai', content: data.answer || data.error || 'No answer.' }]);
@@ -153,9 +154,11 @@ export default function ProfilePage({ params }: { params: { businessId: string }
       </div>
       {/* Chat Modal */}
       <Dialog open={chatOpen} onOpenChange={setChatOpen}>
-        <DialogContent>
-          <div className="flex flex-col gap-4">
-            <div className="flex-1 overflow-y-auto max-h-96 bg-muted rounded p-4">
+        <DialogContent className="w-screen h-screen max-w-none max-h-none p-0 flex flex-col">
+          <DialogTitle className="text-2xl font-bold px-6 pt-6 pb-2">Chat with AI</DialogTitle>
+          <DialogDescription className="px-6 pb-2">Ask any question about this business and get instant answers powered by AI.</DialogDescription>
+          <div className="flex flex-col flex-1 w-full h-full">
+            <div className="flex-1 overflow-y-auto bg-muted p-4">
               {chatMessages.length === 0 && <div className="text-muted-foreground text-center">Start the conversation with AI...</div>}
               {chatMessages.map((msg, i) => (
                 <div key={i} className={msg.role === 'user' ? 'text-right mb-2' : 'text-left mb-2'}>
@@ -166,21 +169,23 @@ export default function ProfilePage({ params }: { params: { businessId: string }
               ))}
               {chatLoading && <div className="text-center text-muted-foreground">AI is thinking...</div>}
             </div>
-            <PromptBox
-              value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
-              onKeyDown={async (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  const value = chatInput.trim();
-                  if (value) {
-                    await handleSendMessage(value);
-                    setChatInput('');
+            <div className="p-4 border-t bg-background">
+              <PromptBox
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const value = chatInput.trim();
+                    if (value) {
+                      await handleSendMessage(value);
+                      setChatInput('');
+                    }
                   }
-                }
-              }}
-              placeholder="Type your question and press Enter..."
-            />
+                }}
+                placeholder="Type your question and press Enter..."
+              />
+            </div>
           </div>
         </DialogContent>
       </Dialog>
