@@ -77,7 +77,7 @@ export default function ProfilePage({ params }: { params: { businessId: string }
   }, [businessId]);
 
   // Get latest analyzed questions
-  const latestQuestions = analyzedResults.length > 0
+  const latestQuestions: [string, any][] = analyzedResults.length > 0
     ? (() => {
         const questions = analyzedResults[0].questions;
         if (!questions) return [];

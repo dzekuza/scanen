@@ -122,6 +122,10 @@ export default function DataLibraryPage() {
 
   // Add loading state for modal save
   const [modalSaving, setModalSaving] = useState(false);
+  
+  // Add state for analyze functionality
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeMessage, setAnalyzeMessage] = useState("");
 
   // Combine all data types into one unified table
   const filteredData = React.useMemo(() => {
@@ -269,6 +273,88 @@ export default function DataLibraryPage() {
   const handleModalBack = () => {
     if (modalStep === 0) setModalOpen(false);
     else setModalStep(s => s - 1);
+  };
+
+  // Handle analyze action for selected documents
+  const handleAnalyze = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) {
+      setAnalyzeMessage("Please select at least one document to analyze.");
+      return;
+    }
+
+    setAnalyzing(true);
+    setAnalyzeMessage("");
+
+    try {
+      // Get selected documents
+      const selectedFiles = selectedRows.map(row => {
+        const data = row.original;
+        return {
+          id: data.id,
+          contentType: data.contentType,
+          fileName: data.fileName,
+          filename: data.id, // This is the actual filename in storage
+        };
+      });
+
+      console.log('Selected files for analysis:', selectedFiles);
+
+      // Prepare questions for analysis
+      const questions = [
+        { question_text: "Kokia yra Jūsų prekės ženklo vizija ir vertybės, kurias norite atspindėti svetainėje?", question_type: "open-ended", order_index: 1, is_required: true, user_id: "default_user" },
+        { question_text: "Kas yra Jūsų tikslinė auditorija ir kokie yra jos poreikiai bei lūkesčiai?", question_type: "open-ended", order_index: 2, is_required: true, user_id: "default_user" },
+        { question_text: "Ar turite esamą vizualinį identitetą (logotipą, spalvas, šriftus) ir ar jam reikalingas atnaujinimas?", question_type: "multiple-choice", order_index: 3, is_required: true, user_id: "default_user" },
+        { question_text: "Jei taip, ar turite brandbook'ą arba stiliaus gaires?", question_type: "yes/no", order_index: 4, is_required: false, user_id: "default_user" },
+        { question_text: "Kiek puslapių planuojate turėti svetainėje ir kokia informacija turėtų būti pateikta kiekviename iš jų?", question_type: "open-ended", order_index: 5, is_required: true, user_id: "default_user" },
+        { question_text: "Kokios pagrindinės funkcijos turėtų būti įdiegtos svetainėje (pvz., prekių užsakymas, PDF atsisiuntimo centras, kontaktinė forma)?", question_type: "open-ended", order_index: 6, is_required: true, user_id: "default_user" },
+        { question_text: "Ar planuojate naudoti svetainę keliomis kalbomis? Jei taip, kokios kalbos Jums aktualios?", question_type: "multiple-choice", order_index: 7, is_required: true, user_id: "default_user" },
+        { question_text: "Ar turite konkretų svetainės dizaino pavyzdį arba viziją, kuria galėtume remtis?", question_type: "yes/no", order_index: 8, is_required: false, user_id: "default_user" },
+        { question_text: "Ar Jums reikalinga turinio valdymo sistema (CMS), tokia kaip WordPress, kad galėtumėte patys atnaujinti svetainės turinį?", question_type: "yes/no", order_index: 9, is_required: true, user_id: "default_user" },
+        { question_text: "Ar turite serverį svetainei talpinti? Jei ne, ar norėtumėte mūsų rekomendacijos?", question_type: "yes/no", order_index: 10, is_required: true, user_id: "default_user" },
+        { question_text: "Ar Jums reikalingos SEO paslaugos, kad Jūsų svetainė būtų geriau matoma Google paieškos rezultatuose?", question_type: "yes/no", order_index: 11, is_required: true, user_id: "default_user" },
+        { question_text: "Ar Jums reikalingas tekstų kūrimas svetainei? Jei taip, kokia kalba?", question_type: "multiple-choice", order_index: 12, is_required: false, user_id: "default_user" },
+        { question_text: "Ar Jums reikalingas foto/video turinys svetainei?", question_type: "yes/no", order_index: 13, is_required: false, user_id: "default_user" },
+        { question_text: "Koks yra Jūsų biudžetas svetainės kūrimui?", question_type: "number", order_index: 14, is_required: false, user_id: "default_user" },
+        { question_text: "Kada norėtumėte paleisti svetainę?", question_type: "date", order_index: 15, is_required: true, user_id: "default_user" },
+        { question_text: "Ar Jums aktualus svetainės pritaikymas mobiliesiems įrenginiams (responsive design)?", question_type: "yes/no", order_index: 16, is_required: true, user_id: "default_user" },
+        { question_text: "Ar turite kokius nors specifinius reikalavimus svetainės saugumui?", question_type: "open-ended", order_index: 17, is_required: false, user_id: "default_user" },
+        { question_text: "Kokie yra trys svarbiausi aspektai Jūsų naujai svetainei?", question_type: "open-ended", order_index: 18, is_required: true, user_id: "default_user" },
+        { question_text: "Ar integruosite svetainę su kitomis sistemomis, pvz., CRM ar el. pašto rinkodaros įrankiais?", question_type: "yes/no", order_index: 19, is_required: false, user_id: "default_user" },
+        { question_text: "Kokie yra Jūsų lūkesčiai dėl svetainės našumo (greitis, stabilumas)?", question_type: "open-ended", order_index: 20, is_required: true, user_id: "default_user" }
+      ];
+
+      // Send webhook for analysis
+      const webhookResponse = await fetch('https://n8n.srv824584.hstgr.cloud/webhook/analyze-offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          files: selectedFiles,
+          user_id: user?.id,
+          business_id: businessId,
+          questions,
+          async: true,
+        })
+      });
+
+      if (!webhookResponse.ok) {
+        throw new Error(`Analysis failed: ${webhookResponse.status} ${webhookResponse.statusText}`);
+      }
+
+      const webhookResult = await webhookResponse.json();
+      console.log('Analysis webhook response:', webhookResult);
+
+      setAnalyzeMessage(`Analysis started for ${selectedFiles.length} document(s). Processing in the background.`);
+      
+      // Clear selection after successful analysis start
+      table.resetRowSelection();
+
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setAnalyzeMessage(`Failed to start analysis: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   React.useEffect(() => {
@@ -706,54 +792,8 @@ export default function DataLibraryPage() {
           throw new Error('Provide a PDF file or a URL')
         }
 
-        const questions = [
-          { question_text: "Kokia yra Jūsų prekės ženklo vizija ir vertybės, kurias norite atspindėti svetainėje?", question_type: "open-ended", order_index: 1, is_required: true, user_id: "default_user" },
-          { question_text: "Kas yra Jūsų tikslinė auditorija ir kokie yra jos poreikiai bei lūkesčiai?", question_type: "open-ended", order_index: 2, is_required: true, user_id: "default_user" },
-          { question_text: "Ar turite esamą vizualinį identitetą (logotipą, spalvas, šriftus) ir ar jam reikalingas atnaujinimas?", question_type: "multiple-choice", order_index: 3, is_required: true, user_id: "default_user" },
-          { question_text: "Jei taip, ar turite brandbook'ą arba stiliaus gaires?", question_type: "yes/no", order_index: 4, is_required: false, user_id: "default_user" },
-          { question_text: "Kiek puslapių planuojate turėti svetainėje ir kokia informacija turėtų būti pateikta kiekviename iš jų?", question_type: "open-ended", order_index: 5, is_required: true, user_id: "default_user" },
-          { question_text: "Kokios pagrindinės funkcijos turėtų būti įdiegtos svetainėje (pvz., prekių užsakymas, PDF atsisiuntimo centras, kontaktinė forma)?", question_type: "open-ended", order_index: 6, is_required: true, user_id: "default_user" },
-          { question_text: "Ar planuojate naudoti svetainę keliomis kalbomis? Jei taip, kokios kalbos Jums aktualios?", question_type: "multiple-choice", order_index: 7, is_required: true, user_id: "default_user" },
-          { question_text: "Ar turite konkretų svetainės dizaino pavyzdį arba viziją, kuria galėtume remtis?", question_type: "yes/no", order_index: 8, is_required: false, user_id: "default_user" },
-          { question_text: "Ar Jums reikalinga turinio valdymo sistema (CMS), tokia kaip WordPress, kad galėtumėte patys atnaujinti svetainės turinį?", question_type: "yes/no", order_index: 9, is_required: true, user_id: "default_user" },
-          { question_text: "Ar turite serverį svetainei talpinti? Jei ne, ar norėtumėte mūsų rekomendacijos?", question_type: "yes/no", order_index: 10, is_required: true, user_id: "default_user" },
-          { question_text: "Ar Jums reikalingos SEO paslaugos, kad Jūsų svetainė būtų geriau matoma Google paieškos rezultatuose?", question_type: "yes/no", order_index: 11, is_required: true, user_id: "default_user" },
-          { question_text: "Ar Jums reikalingas tekstų kūrimas svetainei? Jei taip, kokia kalba?", question_type: "multiple-choice", order_index: 12, is_required: false, user_id: "default_user" },
-          { question_text: "Ar Jums reikalingas foto/video turinys svetainei?", question_type: "yes/no", order_index: 13, is_required: false, user_id: "default_user" },
-          { question_text: "Koks yra Jūsų biudžetas svetainės kūrimui?", question_type: "number", order_index: 14, is_required: false, user_id: "default_user" },
-          { question_text: "Kada norėtumėte paleisti svetainę?", question_type: "date", order_index: 15, is_required: true, user_id: "default_user" },
-          { question_text: "Ar Jums aktualus svetainės pritaikymas mobiliesiems įrenginiams (responsive design)?", question_type: "yes/no", order_index: 16, is_required: true, user_id: "default_user" },
-          { question_text: "Ar turite kokius nors specifinius reikalavimus svetainės saugumui?", question_type: "open-ended", order_index: 17, is_required: false, user_id: "default_user" },
-          { question_text: "Kokie yra trys svarbiausi aspektai Jūsų naujai svetainei?", question_type: "open-ended", order_index: 18, is_required: true, user_id: "default_user" },
-          { question_text: "Ar integruosite svetainę su kitomis sistemomis, pvz., CRM ar el. pašto rinkodaros įrankiais?", question_type: "yes/no", order_index: 19, is_required: false, user_id: "default_user" },
-          { question_text: "Kokie yra Jūsų lūkesčiai dėl svetainės našumo (greitis, stabilumas)?", question_type: "open-ended", order_index: 20, is_required: true, user_id: "default_user" }
-        ]
-
-        // Send webhook for analysis with async processing
-        const webhookResponse = await fetch('https://n8n.srv824584.hstgr.cloud/webhook/analyze-offers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            source_url: publicUrl,
-            source_type: sourceType,
-            user_id: user.id,
-            business_id: businessId,
-            questions,
-            // Add async processing flags for PDF.co
-            async: true,
-            cache: sourceType === 'url' && publicUrl.includes('drive.google.com') ? `cache:${publicUrl}` : publicUrl,
-          })
-        })
-
-        if (!webhookResponse.ok) {
-          throw new Error(`Webhook failed: ${webhookResponse.status} ${webhookResponse.statusText}`)
-        }
-
-        const webhookResult = await webhookResponse.json()
-        console.log('Webhook response:', webhookResult)
-
         // Show success message
-        alert('PDF added successfully! Analysis is processing in the background.')
+        alert('PDF added successfully! You can now select it and click "Analyze" to start analysis.')
 
         // Refresh the PDF list
         const { data: refreshedData } = await supabase
@@ -863,13 +903,23 @@ export default function DataLibraryPage() {
           </Button>
           <Button
             variant="default"
-            disabled={Object.keys(rowSelection).length === 0}
-            onClick={() => {/* TODO: handle analyze action */}}
+            disabled={Object.keys(rowSelection).length === 0 || analyzing}
+            onClick={handleAnalyze}
           >
-            Analyze
+            {analyzing ? "Analyzing..." : "Analyze"}
           </Button>
         </div>
       </div>
+
+      {analyzeMessage && (
+        <div className={`p-4 rounded-lg mb-4 ${
+          analyzeMessage.includes('Failed') || analyzeMessage.includes('Please select') 
+            ? 'bg-red-100 text-red-700 border border-red-200' 
+            : 'bg-green-100 text-green-700 border border-green-200'
+        }`}>
+          {analyzeMessage}
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
         <Table>
