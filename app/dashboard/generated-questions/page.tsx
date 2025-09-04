@@ -13,7 +13,7 @@ interface AnalyzedResult {
   file_id: string | null
   user_id: string | null
   business_id: string | null
-  questions: Record<string, string> | null
+  questions: Record<string, string> | string | string[] | null
   created_at: string
 }
 
@@ -30,7 +30,7 @@ export default function ReportsPage() {
   const [responsesError, setResponsesError] = useState<string | null>(null)
 
   useEffect(() => {
-    setTitle("Your Analyzed Reports")
+    setTitle("Generated Questions")
   }, [setTitle])
 
   React.useEffect(() => {
@@ -71,9 +71,9 @@ export default function ReportsPage() {
       }
       const { data: answers, error } = await supabase
         .from("customer_answers")
-        .select("id, business_id, name, email, phone, question_id, answer, inserted_at")
+        .select("id, business_id, user_id, question_id, answers, answered_at")
         .in("business_id", businessIds)
-        .order("inserted_at", { ascending: false })
+        .order("answered_at", { ascending: false })
       if (error) {
         setResponsesError(error.message)
         setResponses([])
@@ -120,47 +120,86 @@ export default function ReportsPage() {
   return (
     <div className="px-4 lg:px-6">
       {loading ? (
-        <div>Loading analyzed results...</div>
+        <div>Loading generated questions...</div>
       ) : error ? (
         <div className="text-red-500">{error}</div>
       ) : results.length === 0 ? (
-        <div>No analyzed reports found.</div>
+        <div>No generated questions found.</div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {results.map((result) => (
-            <React.Fragment key={result.id}>
-              <div className="font-semibold mb-2">Analyzed on {new Date(result.created_at).toLocaleString()}</div>
-              <div className="text-xs text-gray-500 mb-2">
-                <b>Business ID:</b> {result.business_id}
+            <div key={result.id} className="border rounded-lg p-6">
+              <div className="mb-4">
+                <div className="font-semibold text-lg mb-1">Generated Questions</div>
+                <div className="text-sm text-gray-500">
+                  <span className="font-medium">Analyzed on:</span> {new Date(result.created_at).toLocaleString()}
+                </div>
+                <div className="text-sm text-gray-500">
+                  <span className="font-medium">Business ID:</span> {result.business_id}
+                </div>
               </div>
               <div className="grid grid-cols-1 gap-4">
-                {result.questions && Object.entries(result.questions).length > 0 ? (
-                  Object.entries(result.questions).map(([qKey, qVal], i) => {
+                {(() => {
+                  const q = result.questions
+                  if (!q) return <div className="col-span-1">No questions found for this report.</div>
+
+                  // If stored as a plain string (single question)
+                  if (typeof q === 'string') {
+                    const qKey = 'q1'
+                    const qVal = q
+                    const edited = editedQuestions[result.id]?.[qKey] ?? qVal
+                    const isChanged = edited !== qVal
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <Input value={edited} onChange={e => handleInputChange(result.id, qKey, e.target.value)} />
+                        {isChanged && (
+                          <Button size="sm" onClick={() => handleSave(result as any, qKey)} disabled={saving === `${result.id}-${qKey}`}>
+                            {saving === `${result.id}-${qKey}` ? 'Saving...' : 'Save'}
+                          </Button>
+                        )}
+                      </div>
+                    )
+                  }
+
+                  // If stored as an array of strings
+                  if (Array.isArray(q)) {
+                    return q.map((qVal, i) => {
+                      const qKey = `q${i + 1}`
+                      const edited = editedQuestions[result.id]?.[qKey] ?? qVal
+                      const isChanged = edited !== qVal
+                      return (
+                        <div key={qKey} className="flex flex-col gap-2">
+                          <Input value={edited} onChange={e => handleInputChange(result.id, qKey, e.target.value)} />
+                          {isChanged && (
+                            <Button size="sm" onClick={() => handleSave(result as any, qKey)} disabled={saving === `${result.id}-${qKey}`}>
+                              {saving === `${result.id}-${qKey}` ? 'Saving...' : 'Save'}
+                            </Button>
+                          )}
+                        </div>
+                      )
+                    })
+                  }
+
+                  // Fallback to object map behavior
+                  const entries = Object.entries(q as Record<string, string>)
+                  if (entries.length === 0) return <div className="col-span-1">No questions found for this report.</div>
+                  return entries.map(([qKey, qVal], i) => {
                     const edited = editedQuestions[result.id]?.[qKey] ?? qVal
                     const isChanged = edited !== qVal
                     return (
                       <div key={i} className="flex flex-col gap-2">
-                        <Input
-                          value={edited}
-                          onChange={e => handleInputChange(result.id, qKey, e.target.value)}
-                        />
+                        <Input value={edited} onChange={e => handleInputChange(result.id, qKey, e.target.value)} />
                         {isChanged && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleSave(result, qKey)}
-                            disabled={saving === `${result.id}-${qKey}`}
-                          >
-                            {saving === `${result.id}-${qKey}` ? "Saving..." : "Save"}
+                          <Button size="sm" onClick={() => handleSave(result as any, qKey)} disabled={saving === `${result.id}-${qKey}`}>
+                            {saving === `${result.id}-${qKey}` ? 'Saving...' : 'Save'}
                           </Button>
                         )}
                       </div>
                     )
                   })
-                ) : (
-                  <div className="col-span-1">No questions found for this report.</div>
-                )}
+                })()}
               </div>
-            </React.Fragment>
+            </div>
           ))}
           <div className="mt-10">
             <h2 className="text-lg font-semibold mb-4">All Responses</h2>
@@ -172,29 +211,26 @@ export default function ReportsPage() {
               <div>No responses found.</div>
             ) : (
               <div className="space-y-6">
-                {Object.entries(
-                  responses.reduce((acc, curr) => {
-                    const key = `${curr.user_id}|${curr.inserted_at}`;
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(curr);
-                    return acc;
-                  }, {} as Record<string, any[]>)
-                ).map(([key, group]) => {
-                  const g = group as any[];
-                  return (
-                    <div key={key} className="border rounded p-4">
-                      <div className="mb-2 text-sm text-gray-500">
-                        <b>User ID:</b> {g[0].user_id} <br />
-                        <b>Submitted:</b> {new Date(g[0].inserted_at).toLocaleString()}
-                      </div>
-                      <ul className="list-disc pl-6">
-                        {g.map((resp: any, idx: any) => (
-                          <li key={resp.question_id + idx}><b>Q:</b> {resp.question_id} <b>A:</b> {resp.answer}</li>
-                        ))}
-                      </ul>
+                {responses.map((response: any) => (
+                  <div key={response.id} className="border rounded p-4">
+                    <div className="mb-2 text-sm text-gray-500">
+                      <b>User ID:</b> {response.user_id} <br />
+                      <b>Submitted:</b> {new Date(response.answered_at).toLocaleString()}
                     </div>
-                  );
-                })}
+                    <div className="space-y-2">
+                      {response.answers && typeof response.answers === 'object' ? (
+                        Object.entries(response.answers).map(([questionId, answer]: [string, any]) => (
+                          <div key={questionId} className="flex flex-col gap-1">
+                            <div className="text-sm font-medium">Q: {questionId}</div>
+                            <div className="text-sm text-gray-600">A: {String(answer)}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-sm text-gray-500">No answers found</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

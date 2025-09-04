@@ -61,7 +61,6 @@ export default function DataLibraryPage() {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const { setTitle } = useDashboardTitle()
-  const [activeTab, setActiveTab] = useState("uploaded")
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadMessage, setUploadMessage] = useState("")
@@ -81,6 +80,14 @@ export default function DataLibraryPage() {
   const [pricingError, setPricingError] = useState<string | null>(null)
   const [businessId, setBusinessId] = useState<string | null>(null)
   const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  
+  // All data types state
+  const [csvFiles, setCsvFiles] = useState<FileMeta[]>([])
+  const [jsonFiles, setJsonFiles] = useState<FileMeta[]>([])
+  const [websiteSources, setWebsiteSources] = useState<any[]>([])
+  const [products, setProducts] = useState<any[]>([])
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [pdfUrl, setPdfUrl] = useState("")
 
   // DataTable state
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -112,43 +119,61 @@ export default function DataLibraryPage() {
   // Add loading state for modal save
   const [modalSaving, setModalSaving] = useState(false);
 
-  // Unified data (merge uploadedFiles, businessFiles, pricing, DATA_SOURCES, etc.)
-  const unifiedData = React.useMemo(() => {
-    // Example mapping, real logic should merge all sources
-    const docs = uploadedFiles.map(f => ({
-      id: f.filename,
-      contentType: "Proposal",
-      fileName: f.original_name,
-      uploadedAt: f.uploaded_at,
-      updatedAt: f.uploaded_at,
-      analyzed: false, // TODO: real logic
-    }));
-    const business = businessFiles.map(f => ({
-      id: f.filename,
-      contentType: "Business knowledge",
-      fileName: f.original_name,
-      uploadedAt: f.uploaded_at,
-      updatedAt: f.uploaded_at,
-      analyzed: false,
-    }));
-    const prices = pricing.map(p => ({
-      id: p.id,
-      contentType: "Pricing",
-      fileName: p.headline,
-      uploadedAt: p.created_at,
-      updatedAt: p.created_at,
-      analyzed: false,
-    }));
-    const websites = DATA_SOURCES.map(w => ({
-      id: w.id,
-      contentType: "Website data",
-      fileName: w.name,
-      uploadedAt: w.updated,
-      updatedAt: w.updated,
-      analyzed: false,
-    }));
-    return [...docs, ...business, ...prices, ...websites];
-  }, [uploadedFiles, businessFiles, pricing]);
+  // Filter data based on active tab
+  const filteredData = React.useMemo(() => {
+    switch (activeTab) {
+      case "pdf":
+        return uploadedFiles.filter(f => 
+          f.original_name.toLowerCase().endsWith('.pdf') || 
+          f.original_name.startsWith('PDF from URL:')
+        ).map(f => ({
+          id: f.filename,
+          contentType: f.original_name.startsWith('PDF from URL:') ? "PDF URL" : "PDF Document",
+          fileName: f.original_name,
+          uploadedAt: f.uploaded_at,
+          updatedAt: f.uploaded_at,
+          analyzed: f.original_name.startsWith('PDF from URL:'), // Mark URL PDFs as analyzed since they trigger analysis
+        }));
+      case "csv":
+        return csvFiles.map(f => ({
+          id: f.filename,
+          contentType: "CSV Data",
+          fileName: f.original_name,
+          uploadedAt: f.uploaded_at,
+          updatedAt: f.uploaded_at,
+          analyzed: false,
+        }));
+      case "products":
+        return products.map(p => ({
+          id: p.id,
+          contentType: "Product",
+          fileName: p.name || p.title,
+          uploadedAt: p.created_at,
+          updatedAt: p.updated_at || p.created_at,
+          analyzed: false,
+        }));
+      case "json":
+        return jsonFiles.map(f => ({
+          id: f.filename,
+          contentType: "JSON Data",
+          fileName: f.original_name,
+          uploadedAt: f.uploaded_at,
+          updatedAt: f.uploaded_at,
+          analyzed: false,
+        }));
+      case "website":
+        return websiteSources.map(w => ({
+          id: w.id,
+          contentType: "Website Source",
+          fileName: w.name || w.url,
+          uploadedAt: w.created_at || w.updated,
+          updatedAt: w.updated_at || w.updated,
+          analyzed: false,
+        }));
+      default:
+        return [];
+    }
+  }, [activeTab, uploadedFiles, csvFiles, products, jsonFiles, websiteSources]);
 
   // Table columns
   const columns: ColumnDef<any>[] = [
@@ -211,7 +236,7 @@ export default function DataLibraryPage() {
   ];
 
   const table = useReactTable({
-    data: unifiedData,
+    data: filteredData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -347,12 +372,88 @@ export default function DataLibraryPage() {
     })();
   }, [businessId]);
 
+  // Fetch products (same as pricing for now)
   useEffect(() => {
-    if (activeTab === "uploaded") setTitle("Your Uploaded Files")
-    else if (activeTab === "shared") setTitle("My business data")
-    else if (activeTab === "pricing") setTitle("Pricing")
-    else if (activeTab === "website") setTitle("Website")
-    // Add more as needed
+    if (!businessId) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("pricing")
+        .select("id, headline, description, created_at, price")
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false });
+      setProducts(data || []);
+    })();
+  }, [businessId]);
+
+  // Fetch website sources
+  useEffect(() => {
+    if (!businessId) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("website_sources")
+        .select("id, url, created_at")
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false });
+      setWebsiteSources(data || []);
+    })();
+  }, [businessId]);
+
+  // Fetch CSV and JSON files
+  useEffect(() => {
+    if (!user) return;
+    const fetchFilesByType = async (fileType: string) => {
+      const isAdmin = user.app_metadata?.role === "admin" || user.user_metadata?.role === "admin";
+      let query = supabase.from("documents").select("filename, original_name, uploaded_at, user_id");
+      if (!isAdmin) {
+        query = query.eq("user_id", user.id);
+      }
+      const { data, error } = await query.order("uploaded_at", { ascending: false });
+      
+      if (!error && data) {
+        const files = data
+          .filter(file => file.original_name.toLowerCase().endsWith(`.${fileType}`))
+          .map((file) => {
+            const { data: urlData } = supabase.storage
+              .from("files")
+              .getPublicUrl(file.filename);
+            return {
+              ...file,
+              url: urlData.publicUrl,
+            };
+          });
+        
+        if (fileType === 'csv') {
+          setCsvFiles(files);
+        } else if (fileType === 'json') {
+          setJsonFiles(files);
+        }
+      }
+    };
+    
+    fetchFilesByType('csv');
+    fetchFilesByType('json');
+  }, [user]);
+
+  useEffect(() => {
+    switch (activeTab) {
+      case "pdf":
+        setTitle("PDF Documents")
+        break
+      case "csv":
+        setTitle("CSV Data")
+        break
+      case "products":
+        setTitle("Products")
+        break
+      case "json":
+        setTitle("JSON Data")
+        break
+      case "website":
+        setTitle("Website Sources")
+        break
+      default:
+        setTitle("Data Library")
+    }
   }, [activeTab, setTitle])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -571,8 +672,119 @@ export default function DataLibraryPage() {
   const handleModalSave = async () => {
     setModalSaving(true);
     try {
-      if (selectedType === "Pricing") {
-        if (!pricingName || !pricingValue) throw new Error("Service name and price are required");
+      if (activeTab === "pdf") {
+        if (!user) throw new Error("You must be logged in")
+        let publicUrl: string | null = null
+        let sourceType: 'file' | 'url' | null = null
+
+        if (pdfFile) {
+          const storagePath = `docs/${Date.now()}-${pdfFile.name}`
+          const { error: uploadErr } = await supabase.storage
+            .from("files")
+            .upload(storagePath, pdfFile, {
+              contentType: pdfFile.type || 'application/pdf',
+              upsert: false,
+            })
+          if (uploadErr) throw uploadErr
+          const { data: urlData } = supabase.storage.from('files').getPublicUrl(storagePath)
+          publicUrl = urlData.publicUrl
+          sourceType = 'file'
+          await supabase.from('documents').insert({
+            filename: storagePath,
+            original_name: pdfFile.name,
+            uploaded_at: new Date().toISOString(),
+            user_id: user.id,
+            ...(businessId ? { business_id: businessId } : {}),
+          })
+        } else if (pdfUrl.trim()) {
+          publicUrl = pdfUrl.trim()
+          sourceType = 'url'
+          // Save URL to documents table
+          await supabase.from('documents').insert({
+            filename: `url-${Date.now()}`,
+            original_name: `PDF from URL: ${pdfUrl.trim()}`,
+            uploaded_at: new Date().toISOString(),
+            user_id: user.id,
+            ...(businessId ? { business_id: businessId } : {}),
+          })
+        } else {
+          throw new Error('Provide a PDF file or a URL')
+        }
+
+        const questions = [
+          { question_text: "Kokia yra Jūsų prekės ženklo vizija ir vertybės, kurias norite atspindėti svetainėje?", question_type: "open-ended", order_index: 1, is_required: true, user_id: "default_user" },
+          { question_text: "Kas yra Jūsų tikslinė auditorija ir kokie yra jos poreikiai bei lūkesčiai?", question_type: "open-ended", order_index: 2, is_required: true, user_id: "default_user" },
+          { question_text: "Ar turite esamą vizualinį identitetą (logotipą, spalvas, šriftus) ir ar jam reikalingas atnaujinimas?", question_type: "multiple-choice", order_index: 3, is_required: true, user_id: "default_user" },
+          { question_text: "Jei taip, ar turite brandbook'ą arba stiliaus gaires?", question_type: "yes/no", order_index: 4, is_required: false, user_id: "default_user" },
+          { question_text: "Kiek puslapių planuojate turėti svetainėje ir kokia informacija turėtų būti pateikta kiekviename iš jų?", question_type: "open-ended", order_index: 5, is_required: true, user_id: "default_user" },
+          { question_text: "Kokios pagrindinės funkcijos turėtų būti įdiegtos svetainėje (pvz., prekių užsakymas, PDF atsisiuntimo centras, kontaktinė forma)?", question_type: "open-ended", order_index: 6, is_required: true, user_id: "default_user" },
+          { question_text: "Ar planuojate naudoti svetainę keliomis kalbomis? Jei taip, kokios kalbos Jums aktualios?", question_type: "multiple-choice", order_index: 7, is_required: true, user_id: "default_user" },
+          { question_text: "Ar turite konkretų svetainės dizaino pavyzdį arba viziją, kuria galėtume remtis?", question_type: "yes/no", order_index: 8, is_required: false, user_id: "default_user" },
+          { question_text: "Ar Jums reikalinga turinio valdymo sistema (CMS), tokia kaip WordPress, kad galėtumėte patys atnaujinti svetainės turinį?", question_type: "yes/no", order_index: 9, is_required: true, user_id: "default_user" },
+          { question_text: "Ar turite serverį svetainei talpinti? Jei ne, ar norėtumėte mūsų rekomendacijos?", question_type: "yes/no", order_index: 10, is_required: true, user_id: "default_user" },
+          { question_text: "Ar Jums reikalingos SEO paslaugos, kad Jūsų svetainė būtų geriau matoma Google paieškos rezultatuose?", question_type: "yes/no", order_index: 11, is_required: true, user_id: "default_user" },
+          { question_text: "Ar Jums reikalingas tekstų kūrimas svetainei? Jei taip, kokia kalba?", question_type: "multiple-choice", order_index: 12, is_required: false, user_id: "default_user" },
+          { question_text: "Ar Jums reikalingas foto/video turinys svetainei?", question_type: "yes/no", order_index: 13, is_required: false, user_id: "default_user" },
+          { question_text: "Koks yra Jūsų biudžetas svetainės kūrimui?", question_type: "number", order_index: 14, is_required: false, user_id: "default_user" },
+          { question_text: "Kada norėtumėte paleisti svetainę?", question_type: "date", order_index: 15, is_required: true, user_id: "default_user" },
+          { question_text: "Ar Jums aktualus svetainės pritaikymas mobiliesiems įrenginiams (responsive design)?", question_type: "yes/no", order_index: 16, is_required: true, user_id: "default_user" },
+          { question_text: "Ar turite kokius nors specifinius reikalavimus svetainės saugumui?", question_type: "open-ended", order_index: 17, is_required: false, user_id: "default_user" },
+          { question_text: "Kokie yra trys svarbiausi aspektai Jūsų naujai svetainei?", question_type: "open-ended", order_index: 18, is_required: true, user_id: "default_user" },
+          { question_text: "Ar integruosite svetainę su kitomis sistemomis, pvz., CRM ar el. pašto rinkodaros įrankiais?", question_type: "yes/no", order_index: 19, is_required: false, user_id: "default_user" },
+          { question_text: "Kokie yra Jūsų lūkesčiai dėl svetainės našumo (greitis, stabilumas)?", question_type: "open-ended", order_index: 20, is_required: true, user_id: "default_user" }
+        ]
+
+        // Send webhook for analysis with async processing
+        const webhookResponse = await fetch('https://n8n.srv824584.hstgr.cloud/webhook/analyze-offers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source_url: publicUrl,
+            source_type: sourceType,
+            user_id: user.id,
+            business_id: businessId,
+            questions,
+            // Add async processing flags for PDF.co
+            async: true,
+            cache: sourceType === 'url' && publicUrl.includes('drive.google.com') ? `cache:${publicUrl}` : publicUrl,
+          })
+        })
+
+        if (!webhookResponse.ok) {
+          throw new Error(`Webhook failed: ${webhookResponse.status} ${webhookResponse.statusText}`)
+        }
+
+        const webhookResult = await webhookResponse.json()
+        console.log('Webhook response:', webhookResult)
+
+        // Show success message
+        alert('PDF added successfully! Analysis is processing in the background.')
+
+        // Refresh the PDF list
+        const { data: refreshedData } = await supabase
+          .from("documents")
+          .select("filename, original_name, uploaded_at, user_id")
+          .eq("user_id", user.id)
+          .order("uploaded_at", { ascending: false })
+        
+        if (refreshedData) {
+          const files = refreshedData.map((file) => {
+            const { data: urlData } = supabase.storage
+              .from("files")
+              .getPublicUrl(file.filename)
+            return {
+              ...file,
+              url: urlData.publicUrl,
+            }
+          })
+          setUploadedFiles(files)
+        }
+
+        setPdfFile(null)
+        setPdfUrl("")
+      }
+      if (activeTab === "products") {
+        if (!pricingName || !pricingValue) throw new Error("Product name and price are required");
         if (!businessId) throw new Error("No business ID found");
         const { error } = await supabase.from("pricing").insert({
           business_id: businessId,
@@ -581,12 +793,42 @@ export default function DataLibraryPage() {
           price: parseFloat(pricingValue),
         });
         if (error) throw error;
+        // Refresh products data
+        const { data } = await supabase
+          .from("pricing")
+          .select("id, headline, description, created_at, price")
+          .eq("business_id", businessId)
+          .order("created_at", { ascending: false });
+        setProducts(data || []);
+      } else if (activeTab === "website") {
+        if (!websiteUrls.some(url => url.trim())) throw new Error("At least one website URL is required");
+        if (!businessId) throw new Error("No business ID found");
+        
+        // Insert website sources
+        const websiteInserts = websiteUrls
+          .filter(url => url.trim())
+          .map(url => ({
+            business_id: businessId,
+            url: url.trim(),
+          }));
+        
+        const { error } = await supabase.from("website_sources").insert(websiteInserts);
+        if (error) throw error;
+        
+        // Refresh website sources data
+        const { data } = await supabase
+          .from("website_sources")
+          .select("id, url, created_at")
+          .eq("business_id", businessId)
+          .order("created_at", { ascending: false });
+        setWebsiteSources(data || []);
       }
-      // Proposals and Business knowledge (CSV) handled by ImageUploadDemo, but ensure metadata is inserted
-      // (Assume ImageUploadDemo already uploads to storage and inserts metadata into documents)
-      // If you want to handle manual insertion here, add logic as needed
+      // PDF, CSV, and JSON uploads are handled by ImageUploadDemo component
       setModalOpen(false);
-      // Optionally, refresh data here
+      setPricingName("");
+      setPricingDescription("");
+      setPricingValue("");
+      setWebsiteUrls([""]);
     } catch (err) {
       if (err instanceof Error) {
         alert(err.message);
@@ -600,149 +842,308 @@ export default function DataLibraryPage() {
 
   return (
     <div className="px-4 lg:px-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex gap-2">
-          <Button onClick={() => { setModalOpen(true); setModalStep(0); setSelectedType(null); }}>
-            <PlusIcon className="mr-2 h-4 w-4" /> Add new
-          </Button>
-          <Button
-            variant="default"
-            disabled={Object.keys(rowSelection).length === 0}
-            onClick={() => {/* TODO: handle analyze action */}}
-          >
-            Analyze
-          </Button>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between mb-6">
+          <TabsList className="grid w-full max-w-md grid-cols-5">
+            <TabsTrigger value="pdf">PDF</TabsTrigger>
+            <TabsTrigger value="csv">CSV</TabsTrigger>
+            <TabsTrigger value="products">PRODUCTS</TabsTrigger>
+            <TabsTrigger value="json">JSON</TabsTrigger>
+            <TabsTrigger value="website">WEBSITE</TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2">
+            <Button onClick={() => { setModalOpen(true); setModalStep(0); setSelectedType(null); }}>
+              <PlusIcon className="mr-2 h-4 w-4" /> Add new
+            </Button>
+            <Button
+              variant="default"
+              disabled={Object.keys(rowSelection).length === 0}
+              onClick={() => {/* TODO: handle analyze action */}}
+            >
+              Analyze
+            </Button>
+          </div>
         </div>
-      </div>
-      <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
+
+        <TabsContent value="pdf" className="space-y-4">
+          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
                 ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
                 ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="csv" className="space-y-4">
+          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="products" className="space-y-4">
+          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="json" className="space-y-4">
+          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="website" className="space-y-4">
+          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+      </Tabs>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-lg">
-          {modalStep === 0 && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Select content type</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {["Proposals", "Business knowledge", "Pricing", "Website data"].map(type => (
-                  <Button key={type} variant={selectedType === type ? "default" : "outline"} onClick={() => handleTypeSelect(type)}>{type}</Button>
-                ))}
-              </div>
-            </div>
-          )}
-          {modalStep === 1 && selectedType && (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Add {selectedType}</h2>
-              {selectedType === "Website data" && (
+          <DialogHeader>
+            <DialogTitle>Add {activeTab.toUpperCase()} Data</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {activeTab === "pdf" && (
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Website URLs</label>
-                  {websiteUrls.map((url, idx) => (
-                    <div key={idx} className="flex gap-2 mb-2">
-                      <Input
-                        placeholder="https://example.com"
-                        value={url}
-                        onChange={e => setWebsiteUrls(urls => urls.map((u, i) => i === idx ? e.target.value : u))}
-                      />
-                      {websiteUrls.length > 1 && (
-                        <Button variant="destructive" size="icon" onClick={() => setWebsiteUrls(urls => urls.filter((_, i) => i !== idx))}>-</Button>
-                      )}
-                    </div>
-                  ))}
-                  <Button variant="outline" onClick={() => setWebsiteUrls(urls => [...urls, ""])} className="w-full mb-2">+ Add another URL</Button>
-                </div>
-              )}
-              {selectedType === "Proposals" && (
-                <div className="mb-4">
-                  <ImageUploadDemo />
-                </div>
-              )}
-              {selectedType === "Business knowledge" && (
-                <div className="mb-4">
-                  <div className="flex gap-2 mb-2">
-                    <Button
-                      variant={businessKnowledgeMode === 'csv' ? 'default' : 'outline'}
-                      onClick={() => setBusinessKnowledgeMode('csv')}
-                    >
-                      Upload CSV
-                    </Button>
-                    <Button
-                      variant={businessKnowledgeMode === 'manual' ? 'default' : 'outline'}
-                      onClick={() => setBusinessKnowledgeMode('manual')}
-                    >
-                      Write manually
-                    </Button>
-                  </div>
-                  {businessKnowledgeMode === 'csv' ? (
-                    <ImageUploadDemo />
-                  ) : (
-                    <textarea
-                      className="w-full px-3 py-2 rounded border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-                      rows={5}
-                      placeholder="Enter business knowledge manually..."
-                      value={businessKnowledgeText}
-                      onChange={e => setBusinessKnowledgeText(e.target.value)}
-                    />
-                  )}
-                </div>
-              )}
-              {selectedType === "Pricing" && (
-                <div className="mb-4 space-y-2">
+                  <label className="block text-sm font-medium mb-2">Upload PDF Document</label>
                   <Input
-                    placeholder="Service name"
+                    type="file"
+                    accept="application/pdf"
+                    onChange={e => setPdfFile(e.target.files?.[0] || null)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">or Add by URL</label>
+                  <Input
+                    placeholder="https://example.com/file.pdf"
+                    value={pdfUrl}
+                    onChange={e => setPdfUrl(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+            {activeTab === "csv" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Upload CSV File</label>
+                <ImageUploadDemo />
+              </div>
+            )}
+            {activeTab === "json" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Upload JSON File</label>
+                <ImageUploadDemo />
+              </div>
+            )}
+            {activeTab === "products" && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Product Name</label>
+                  <Input
+                    placeholder="Enter product name"
                     value={pricingName}
                     onChange={e => setPricingName(e.target.value)}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
                   <Input
-                    placeholder="Description"
+                    placeholder="Enter product description"
                     value={pricingDescription}
                     onChange={e => setPricingDescription(e.target.value)}
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Price (€)</label>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
-                    placeholder="Price (€)"
+                    placeholder="Enter price"
                     value={pricingValue}
                     onChange={e => setPricingValue(e.target.value)}
                   />
                 </div>
-              )}
-              <div className="flex justify-between mt-6">
-                <Button variant="secondary" onClick={handleModalBack} disabled={modalSaving}>Back</Button>
-                <Button onClick={handleModalSave} disabled={modalSaving}>{modalSaving ? "Saving..." : "Save"}</Button>
               </div>
-            </div>
-          )}
+            )}
+            {activeTab === "website" && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Website URLs</label>
+                {websiteUrls.map((url, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2">
+                    <Input
+                      placeholder="https://example.com"
+                      value={url}
+                      onChange={e => setWebsiteUrls(urls => urls.map((u, i) => i === idx ? e.target.value : u))}
+                    />
+                    {websiteUrls.length > 1 && (
+                      <Button variant="destructive" size="icon" onClick={() => setWebsiteUrls(urls => urls.filter((_, i) => i !== idx))}>-</Button>
+                    )}
+                  </div>
+                ))}
+                <Button variant="outline" onClick={() => setWebsiteUrls(urls => [...urls, ""])} className="w-full mb-2">+ Add another URL</Button>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleModalSave} disabled={modalSaving}>
+              {modalSaving ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

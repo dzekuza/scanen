@@ -48,11 +48,6 @@ const data = {
       icon: LayoutDashboardIcon,
     },
     {
-      title: "Analytics",
-      url: "#",
-      icon: BarChartIcon,
-    },
-    {
       title: "Customers",
       url: "/dashboard/customers",
       icon: UsersIcon,
@@ -140,8 +135,8 @@ const data = {
       icon: DatabaseIcon,
     },
     {
-      name: "Reports",
-      url: "/dashboard/reports",
+      name: "Generated questions",
+      url: "/dashboard/generated-questions",
       icon: ClipboardListIcon,
     },
     {

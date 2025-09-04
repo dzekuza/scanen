@@ -43,13 +43,32 @@ export default function ProfilePage({ params }: { params: { businessId: string }
         .single();
       if (data) {
         setBusiness(data);
-        // Fetch all analyzed results for this business
-        const { data: resultsData } = await supabase
-          .from("analyzed_results")
-          .select("id, questions, created_at")
+        // Fetch all analyzed questions for this business
+        const { data: questionsData } = await supabase
+          .from("analyzed_questions")
+          .select("id, question_text, question_type, is_required, order_index, created_at")
           .eq("business_id", data.id)
-          .order("created_at", { ascending: false });
-        setAnalyzedResults(resultsData || []);
+          .order("order_index", { ascending: true });
+        
+        // If no questions in analyzed_questions, check the questions table
+        let finalQuestions = questionsData;
+        if (!finalQuestions || finalQuestions.length === 0) {
+          const { data: questionsTableData } = await supabase
+            .from("questions")
+            .select("id, question_text, question_type, is_required, order_index, created_at")
+            .eq("business_id", data.id)
+            .order("order_index", { ascending: true });
+          finalQuestions = questionsTableData;
+        }
+        
+        // Convert to the format expected by the component
+        const formattedResults = finalQuestions ? [{
+          id: 'latest',
+          questions: finalQuestions.map(q => q.question_text),
+          created_at: finalQuestions[0]?.created_at || new Date().toISOString()
+        }] : [];
+        
+        setAnalyzedResults(formattedResults);
       } else {
         setBusiness(null);
       }
@@ -59,7 +78,20 @@ export default function ProfilePage({ params }: { params: { businessId: string }
 
   // Get latest analyzed questions
   const latestQuestions = analyzedResults.length > 0
-    ? Object.entries(analyzedResults[0].questions || {})
+    ? (() => {
+        const questions = analyzedResults[0].questions;
+        if (!questions) return [];
+        
+        // Handle different question formats
+        if (typeof questions === 'string') {
+          return [['q1', questions]]; // Single question as string
+        } else if (Array.isArray(questions)) {
+          return questions.map((q, i) => [`q${i + 1}`, q]); // Array of questions
+        } else if (typeof questions === 'object') {
+          return Object.entries(questions); // Object with key-value pairs
+        }
+        return [];
+      })()
     : [];
 
   const handleAnswerChange = (questionId: string, value: string) => {
