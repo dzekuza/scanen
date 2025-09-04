@@ -96,7 +96,7 @@ export default function ReportsPage() {
   }
 
   const handleSave = async (result: AnalyzedResult, qKey: string) => {
-    if (!result.questions) return
+    if (!result.questions || typeof result.questions !== 'object' || Array.isArray(result.questions)) return
     setSaving(`${result.id}-${qKey}`)
     const updatedQuestions = { ...result.questions, [qKey]: editedQuestions[result.id]?.[qKey] }
     const { error } = await supabase

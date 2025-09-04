@@ -87,6 +87,11 @@ export default function DataLibraryPage() {
   const [products, setProducts] = useState<any[]>([])
   const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [pdfUrl, setPdfUrl] = useState("")
+  
+  // Manual Q&A state
+  const [manualQuestion, setManualQuestion] = useState("")
+  const [manualAnswer, setManualAnswer] = useState("")
+  const [manualEntries, setManualEntries] = useState<any[]>([])
 
   // DataTable state
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -126,21 +131,21 @@ export default function DataLibraryPage() {
         f.original_name.toLowerCase().endsWith('.pdf') || 
         f.original_name.startsWith('PDF from URL:')
       ).map(f => ({
-        id: f.filename,
+      id: f.filename,
         contentType: f.original_name.startsWith('PDF from URL:') ? "PDF URL" : "PDF Document",
-        fileName: f.original_name,
-        uploadedAt: f.uploaded_at,
-        updatedAt: f.uploaded_at,
+      fileName: f.original_name,
+      uploadedAt: f.uploaded_at,
+      updatedAt: f.uploaded_at,
         analyzed: f.original_name.startsWith('PDF from URL:'),
       })),
       // CSV files
       ...csvFiles.map(f => ({
-        id: f.filename,
+      id: f.filename,
         contentType: "CSV Data",
-        fileName: f.original_name,
-        uploadedAt: f.uploaded_at,
-        updatedAt: f.uploaded_at,
-        analyzed: false,
+      fileName: f.original_name,
+      uploadedAt: f.uploaded_at,
+      updatedAt: f.uploaded_at,
+      analyzed: false,
       })),
       // JSON files
       ...jsonFiles.map(f => ({
@@ -153,26 +158,35 @@ export default function DataLibraryPage() {
       })),
       // Products
       ...products.map(p => ({
-        id: p.id,
+      id: p.id,
         contentType: "Product",
         fileName: p.headline || p.name || p.title,
-        uploadedAt: p.created_at,
+      uploadedAt: p.created_at,
         updatedAt: p.updated_at || p.created_at,
-        analyzed: false,
+      analyzed: false,
       })),
       // Website sources
       ...websiteSources.map(w => ({
-        id: w.id,
+      id: w.id,
         contentType: "Website Source",
         fileName: w.url,
         uploadedAt: w.created_at,
         updatedAt: w.created_at,
+      analyzed: false,
+      })),
+      // Manual Q&A entries
+      ...manualEntries.map(m => ({
+        id: m.id,
+        contentType: "Manual Q&A",
+        fileName: m.question,
+        uploadedAt: m.created_at,
+        updatedAt: m.created_at,
         analyzed: false,
       })),
     ];
     
     return allData.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
-  }, [uploadedFiles, csvFiles, products, jsonFiles, websiteSources]);
+  }, [uploadedFiles, csvFiles, products, jsonFiles, websiteSources, manualEntries]);
 
   // Table columns
   const columns: ColumnDef<any>[] = [
@@ -802,6 +816,25 @@ export default function DataLibraryPage() {
           .eq("business_id", businessId)
           .order("created_at", { ascending: false });
         setWebsiteSources(data || []);
+      } else if (selectedType === "Manual") {
+        if (!manualQuestion.trim() || !manualAnswer.trim()) throw new Error("Both question and answer are required");
+        if (!businessId) throw new Error("No business ID found");
+        
+        // Create a new manual entry
+        const newEntry = {
+          id: `manual-${Date.now()}`,
+          question: manualQuestion.trim(),
+          answer: manualAnswer.trim(),
+          created_at: new Date().toISOString(),
+          business_id: businessId,
+        };
+        
+        // Add to local state
+        setManualEntries(prev => [newEntry, ...prev]);
+        
+        // Clear form
+        setManualQuestion("");
+        setManualAnswer("");
       }
       // PDF, CSV, and JSON uploads are handled by ImageUploadDemo component
       setModalOpen(false);
@@ -878,7 +911,7 @@ export default function DataLibraryPage() {
             <DialogTitle>Add New Data</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {modalStep === 0 && (
+          {modalStep === 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Select Data Type</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -917,17 +950,25 @@ export default function DataLibraryPage() {
                   <Button 
                     variant="outline" 
                     onClick={() => handleTypeSelect("Website Source")}
-                    className="h-20 flex flex-col items-center justify-center col-span-2"
+                    className="h-20 flex flex-col items-center justify-center"
                   >
                     <GlobeIcon className="h-6 w-6 mb-2" />
                     Website Source
                   </Button>
-                </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTypeSelect("Manual")}
+                    className="h-20 flex flex-col items-center justify-center"
+                  >
+                    <FileTextIcon className="h-6 w-6 mb-2" />
+                    Manual Q&A
+                  </Button>
               </div>
-            )}
+            </div>
+          )}
             {modalStep === 1 && selectedType === "PDF Document" && (
               <div className="space-y-4">
-                <div>
+            <div>
                   <label className="block text-sm font-medium mb-2">Upload PDF Document</label>
                   <Input
                     type="file"
@@ -937,26 +978,26 @@ export default function DataLibraryPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">or Add by URL</label>
-                  <Input
+                      <Input
                     placeholder="https://example.com/file.pdf"
                     value={pdfUrl}
                     onChange={e => setPdfUrl(e.target.value)}
                   />
+                    </div>
                 </div>
-              </div>
-            )}
+              )}
             {modalStep === 1 && selectedType === "CSV Data" && (
               <div>
                 <label className="block text-sm font-medium mb-2">Upload CSV File</label>
-                <ImageUploadDemo />
-              </div>
-            )}
+                  <ImageUploadDemo />
+                </div>
+              )}
             {modalStep === 1 && selectedType === "JSON Data" && (
               <div>
                 <label className="block text-sm font-medium mb-2">Upload JSON File</label>
-                <ImageUploadDemo />
-              </div>
-            )}
+                    <ImageUploadDemo />
+                </div>
+              )}
             {modalStep === 1 && selectedType === "Product" && (
               <div className="space-y-4">
                 <div>
@@ -986,8 +1027,8 @@ export default function DataLibraryPage() {
                     onChange={e => setPricingValue(e.target.value)}
                   />
                 </div>
-              </div>
-            )}
+                </div>
+              )}
             {modalStep === 1 && selectedType === "Website Source" && (
               <div>
                 <label className="block text-sm font-medium mb-2">Website URLs</label>
@@ -1001,9 +1042,29 @@ export default function DataLibraryPage() {
                     {websiteUrls.length > 1 && (
                       <Button variant="destructive" size="icon" onClick={() => setWebsiteUrls(urls => urls.filter((_, i) => i !== idx))}>-</Button>
                     )}
-                  </div>
+              </div>
                 ))}
                 <Button variant="outline" onClick={() => setWebsiteUrls(urls => [...urls, ""])} className="w-full mb-2">+ Add another URL</Button>
+            </div>
+          )}
+            {modalStep === 1 && selectedType === "Manual" && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Question</label>
+                  <Input
+                    placeholder="Enter your question"
+                    value={manualQuestion}
+                    onChange={e => setManualQuestion(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Answer</label>
+                  <Input
+                    placeholder="Enter the answer"
+                    value={manualAnswer}
+                    onChange={e => setManualAnswer(e.target.value)}
+                  />
+                </div>
               </div>
             )}
           </div>
