@@ -2,6 +2,6 @@
   "/profile/[businessId]/page": "app/profile/[businessId]/page.js",
   "/dashboard/data-library/page": "app/dashboard/data-library/page.js",
   "/dashboard/answers/page": "app/dashboard/answers/page.js",
-  "/(marketing)/page": "app/(marketing)/page.js",
-  "/dashboard/project-settings/page": "app/dashboard/project-settings/page.js"
+  "/dashboard/project-settings/page": "app/dashboard/project-settings/page.js",
+  "/(marketing)/page": "app/(marketing)/page.js"
 }

@@ -5,7 +5,6 @@ import { useAuth } from "@/components/auth-provider"
 import { supabase } from "@/lib/supabaseClient"
 import { useEffect, useState, useRef } from "react"
 import { useDashboardTitle } from "@/components/dashboard-title-context"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -25,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusIcon, GlobeIcon, FileTextIcon, UploadIcon } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusIcon, GlobeIcon, FileTextIcon, UploadIcon, FileIcon, FileCodeIcon, ListIcon } from "lucide-react"
 import {
   ColumnDef,
   flexRender,
@@ -119,61 +118,61 @@ export default function DataLibraryPage() {
   // Add loading state for modal save
   const [modalSaving, setModalSaving] = useState(false);
 
-  // Filter data based on active tab
+  // Combine all data types into one unified table
   const filteredData = React.useMemo(() => {
-    switch (activeTab) {
-      case "pdf":
-        return uploadedFiles.filter(f => 
-          f.original_name.toLowerCase().endsWith('.pdf') || 
-          f.original_name.startsWith('PDF from URL:')
-        ).map(f => ({
-          id: f.filename,
-          contentType: f.original_name.startsWith('PDF from URL:') ? "PDF URL" : "PDF Document",
-          fileName: f.original_name,
-          uploadedAt: f.uploaded_at,
-          updatedAt: f.uploaded_at,
-          analyzed: f.original_name.startsWith('PDF from URL:'), // Mark URL PDFs as analyzed since they trigger analysis
-        }));
-      case "csv":
-        return csvFiles.map(f => ({
-          id: f.filename,
-          contentType: "CSV Data",
-          fileName: f.original_name,
-          uploadedAt: f.uploaded_at,
-          updatedAt: f.uploaded_at,
-          analyzed: false,
-        }));
-      case "products":
-        return products.map(p => ({
-          id: p.id,
-          contentType: "Product",
-          fileName: p.name || p.title,
-          uploadedAt: p.created_at,
-          updatedAt: p.updated_at || p.created_at,
-          analyzed: false,
-        }));
-      case "json":
-        return jsonFiles.map(f => ({
-          id: f.filename,
-          contentType: "JSON Data",
-          fileName: f.original_name,
-          uploadedAt: f.uploaded_at,
-          updatedAt: f.uploaded_at,
-          analyzed: false,
-        }));
-      case "website":
-        return websiteSources.map(w => ({
-          id: w.id,
-          contentType: "Website Source",
-          fileName: w.name || w.url,
-          uploadedAt: w.created_at || w.updated,
-          updatedAt: w.updated_at || w.updated,
-          analyzed: false,
-        }));
-      default:
-        return [];
-    }
-  }, [activeTab, uploadedFiles, csvFiles, products, jsonFiles, websiteSources]);
+    const allData = [
+      // PDF files
+      ...uploadedFiles.filter(f => 
+        f.original_name.toLowerCase().endsWith('.pdf') || 
+        f.original_name.startsWith('PDF from URL:')
+      ).map(f => ({
+        id: f.filename,
+        contentType: f.original_name.startsWith('PDF from URL:') ? "PDF URL" : "PDF Document",
+        fileName: f.original_name,
+        uploadedAt: f.uploaded_at,
+        updatedAt: f.uploaded_at,
+        analyzed: f.original_name.startsWith('PDF from URL:'),
+      })),
+      // CSV files
+      ...csvFiles.map(f => ({
+        id: f.filename,
+        contentType: "CSV Data",
+        fileName: f.original_name,
+        uploadedAt: f.uploaded_at,
+        updatedAt: f.uploaded_at,
+        analyzed: false,
+      })),
+      // JSON files
+      ...jsonFiles.map(f => ({
+        id: f.filename,
+        contentType: "JSON Data",
+        fileName: f.original_name,
+        uploadedAt: f.uploaded_at,
+        updatedAt: f.uploaded_at,
+        analyzed: false,
+      })),
+      // Products
+      ...products.map(p => ({
+        id: p.id,
+        contentType: "Product",
+        fileName: p.headline || p.name || p.title,
+        uploadedAt: p.created_at,
+        updatedAt: p.updated_at || p.created_at,
+        analyzed: false,
+      })),
+      // Website sources
+      ...websiteSources.map(w => ({
+        id: w.id,
+        contentType: "Website Source",
+        fileName: w.url,
+        uploadedAt: w.created_at,
+        updatedAt: w.created_at,
+        analyzed: false,
+      })),
+    ];
+    
+    return allData.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+  }, [uploadedFiles, csvFiles, products, jsonFiles, websiteSources]);
 
   // Table columns
   const columns: ColumnDef<any>[] = [
@@ -435,26 +434,8 @@ export default function DataLibraryPage() {
   }, [user]);
 
   useEffect(() => {
-    switch (activeTab) {
-      case "pdf":
-        setTitle("PDF Documents")
-        break
-      case "csv":
-        setTitle("CSV Data")
-        break
-      case "products":
-        setTitle("Products")
-        break
-      case "json":
-        setTitle("JSON Data")
-        break
-      case "website":
-        setTitle("Website Sources")
-        break
-      default:
-        setTitle("Data Library")
-    }
-  }, [activeTab, setTitle])
+    setTitle("Data Library")
+  }, [setTitle])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -672,7 +653,7 @@ export default function DataLibraryPage() {
   const handleModalSave = async () => {
     setModalSaving(true);
     try {
-      if (activeTab === "pdf") {
+      if (selectedType === "PDF Document") {
         if (!user) throw new Error("You must be logged in")
         let publicUrl: string | null = null
         let sourceType: 'file' | 'url' | null = null
@@ -782,8 +763,7 @@ export default function DataLibraryPage() {
 
         setPdfFile(null)
         setPdfUrl("")
-      }
-      if (activeTab === "products") {
+      } else if (selectedType === "Product") {
         if (!pricingName || !pricingValue) throw new Error("Product name and price are required");
         if (!businessId) throw new Error("No business ID found");
         const { error } = await supabase.from("pricing").insert({
@@ -800,7 +780,7 @@ export default function DataLibraryPage() {
           .eq("business_id", businessId)
           .order("created_at", { ascending: false });
         setProducts(data || []);
-      } else if (activeTab === "website") {
+      } else if (selectedType === "Website Source") {
         if (!websiteUrls.some(url => url.trim())) throw new Error("At least one website URL is required");
         if (!businessId) throw new Error("No business ID found");
         
@@ -842,221 +822,110 @@ export default function DataLibraryPage() {
 
   return (
     <div className="px-4 lg:px-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-5">
-            <TabsTrigger value="pdf">PDF</TabsTrigger>
-            <TabsTrigger value="csv">CSV</TabsTrigger>
-            <TabsTrigger value="products">PRODUCTS</TabsTrigger>
-            <TabsTrigger value="json">JSON</TabsTrigger>
-            <TabsTrigger value="website">WEBSITE</TabsTrigger>
-          </TabsList>
-          <div className="flex gap-2">
-            <Button onClick={() => { setModalOpen(true); setModalStep(0); setSelectedType(null); }}>
-              <PlusIcon className="mr-2 h-4 w-4" /> Add new
-            </Button>
-            <Button
-              variant="default"
-              disabled={Object.keys(rowSelection).length === 0}
-              onClick={() => {/* TODO: handle analyze action */}}
-            >
-              Analyze
-            </Button>
-          </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Data Library</h1>
+        <div className="flex gap-2">
+          <Button onClick={() => { setModalOpen(true); setModalStep(0); setSelectedType(null); }}>
+            <PlusIcon className="mr-2 h-4 w-4" /> Add new
+          </Button>
+          <Button
+            variant="default"
+            disabled={Object.keys(rowSelection).length === 0}
+            onClick={() => {/* TODO: handle analyze action */}}
+          >
+            Analyze
+          </Button>
         </div>
+      </div>
 
-        <TabsContent value="pdf" className="space-y-4">
-          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+      <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="csv" className="space-y-4">
-          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="products" className="space-y-4">
-          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="json" className="space-y-4">
-          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="website" className="space-y-4">
-          <div className="bg-white rounded-lg shadow border p-0 overflow-x-auto">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id} className={header.column.id === 'actions' ? 'text-right' : ''}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </TabsContent>
-      </Tabs>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Add {activeTab.toUpperCase()} Data</DialogTitle>
+            <DialogTitle>Add New Data</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {activeTab === "pdf" && (
+            {modalStep === 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Select Data Type</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTypeSelect("PDF Document")}
+                    className="h-20 flex flex-col items-center justify-center"
+                  >
+                    <FileTextIcon className="h-6 w-6 mb-2" />
+                    PDF Document
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTypeSelect("CSV Data")}
+                    className="h-20 flex flex-col items-center justify-center"
+                  >
+                    <FileIcon className="h-6 w-6 mb-2" />
+                    CSV Data
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTypeSelect("JSON Data")}
+                    className="h-20 flex flex-col items-center justify-center"
+                  >
+                    <FileCodeIcon className="h-6 w-6 mb-2" />
+                    JSON Data
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTypeSelect("Product")}
+                    className="h-20 flex flex-col items-center justify-center"
+                  >
+                    <ListIcon className="h-6 w-6 mb-2" />
+                    Product
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleTypeSelect("Website Source")}
+                    className="h-20 flex flex-col items-center justify-center col-span-2"
+                  >
+                    <GlobeIcon className="h-6 w-6 mb-2" />
+                    Website Source
+                  </Button>
+                </div>
+              </div>
+            )}
+            {modalStep === 1 && selectedType === "PDF Document" && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Upload PDF Document</label>
@@ -1076,19 +945,19 @@ export default function DataLibraryPage() {
                 </div>
               </div>
             )}
-            {activeTab === "csv" && (
+            {modalStep === 1 && selectedType === "CSV Data" && (
               <div>
                 <label className="block text-sm font-medium mb-2">Upload CSV File</label>
                 <ImageUploadDemo />
               </div>
             )}
-            {activeTab === "json" && (
+            {modalStep === 1 && selectedType === "JSON Data" && (
               <div>
                 <label className="block text-sm font-medium mb-2">Upload JSON File</label>
                 <ImageUploadDemo />
               </div>
             )}
-            {activeTab === "products" && (
+            {modalStep === 1 && selectedType === "Product" && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Product Name</label>
@@ -1119,7 +988,7 @@ export default function DataLibraryPage() {
                 </div>
               </div>
             )}
-            {activeTab === "website" && (
+            {modalStep === 1 && selectedType === "Website Source" && (
               <div>
                 <label className="block text-sm font-medium mb-2">Website URLs</label>
                 {websiteUrls.map((url, idx) => (
@@ -1140,9 +1009,14 @@ export default function DataLibraryPage() {
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleModalSave} disabled={modalSaving}>
-              {modalSaving ? "Saving..." : "Save"}
-            </Button>
+            {modalStep === 1 && (
+              <Button variant="outline" onClick={handleModalBack}>Back</Button>
+            )}
+            {modalStep === 1 && (
+              <Button onClick={handleModalSave} disabled={modalSaving}>
+                {modalSaving ? "Saving..." : "Save"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
